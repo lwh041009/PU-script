@@ -29,6 +29,11 @@ install_node() {
 
   if command -v apt-get >/dev/null 2>&1; then
     export DEBIAN_FRONTEND=noninteractive
+    if command -v dpkg >/dev/null 2>&1; then
+      echo "正在检查并修复 Ubuntu/Debian 软件包状态..."
+      dpkg --configure -a
+      apt-get -f install -y
+    fi
     apt-get update
     apt-get install -y ca-certificates curl
     curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
