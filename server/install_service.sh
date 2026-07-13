@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+cd "$SCRIPT_DIR"
+
 SERVICE_NAME="${SERVICE_NAME:-pu-reservation-server}"
-INSTALL_DIR="${INSTALL_DIR:-$(pwd -P)}"
+INSTALL_DIR="${INSTALL_DIR:-$SCRIPT_DIR}"
 PORT="${PORT:-8787}"
 SERVER_TOKEN="${SERVER_TOKEN:-879487}"
 USE_FORK_WORKERS="${USE_FORK_WORKERS:-1}"
