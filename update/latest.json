@@ -1,13 +1,14 @@
 {
-  "versionCode": 2,
-  "versionName": "1.1",
+  "versionCode": 3,
+  "versionName": "1.2.0",
   "title": "PU 脚本",
   "changelog": [
-    "支持 GitHub 版本检查",
+    "支持每小时后台检查新版本",
+    "发现新版本后发送系统通知",
     "优化本地预约报名执行"
   ],
   "apkUrl": "https://github.com/lwh041009/PU-script/releases/latest/download/PU-script.apk",
-  "sha256": "33e57f09ab7a1482d87e61e5515febe73ed8f93308151eb1b5887f82d62801b",
+  "sha256": "06c87d3a3f94d1f84bed95779a3277d3809524cfefe7a6ddc223bd9fdf4eee31",
   "minVersionCode": 1,
   "force": false
 }

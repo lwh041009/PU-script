@@ -84,6 +84,7 @@ public class MainActivity extends Activity {
         BeijingTime.syncIfNeeded(this);
         BeijingTime.scheduleNextSync(this);
         new ReservationScheduler(this).ensureChannel();
+        UpdateScheduler.schedule(this);
         requestNotificationPermission();
         account = db.getLastAccount();
         if (account == null || account.token == null || account.token.isEmpty()) {

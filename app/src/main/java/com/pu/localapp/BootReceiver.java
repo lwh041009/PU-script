@@ -10,6 +10,7 @@ public class BootReceiver extends BroadcastReceiver {
         if (Intent.ACTION_BOOT_COMPLETED.equals(intent.getAction())) {
             BeijingTime.syncIfNeeded(context);
             BeijingTime.scheduleNextSync(context);
+            UpdateScheduler.schedule(context);
             new ReservationScheduler(context).restorePending();
         }
     }

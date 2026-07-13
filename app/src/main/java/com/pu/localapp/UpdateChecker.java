@@ -21,7 +21,8 @@ final class UpdateChecker {
     };
     private static final String PREFS = "pu_update_check";
     private static final String KEY_LAST_CHECK = "last_check";
-    private static final long AUTO_CHECK_INTERVAL_MS = 6L * 60L * 60L * 1000L;
+    private static final String KEY_LAST_NOTIFIED_VERSION = "last_notified_version";
+    private static final long AUTO_CHECK_INTERVAL_MS = 60L * 60L * 1000L;
 
     private UpdateChecker() {
     }
@@ -75,16 +76,31 @@ final class UpdateChecker {
 
         new Thread(() -> {
             try {
-                UpdateInfo info = fetch();
-                app.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-                        .edit()
-                        .putLong(KEY_LAST_CHECK, System.currentTimeMillis())
-                        .apply();
-                postSuccess(callback, info != null && info.isNewer() ? info : null);
+                postSuccess(callback, checkNow(app));
             } catch (Exception ex) {
                 postError(callback, ex);
             }
         }, "pu-update-check").start();
+    }
+
+    static UpdateInfo checkNow(Context context) throws Exception {
+        Context app = context.getApplicationContext();
+        UpdateInfo info = fetch();
+        app.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                .edit()
+                .putLong(KEY_LAST_CHECK, System.currentTimeMillis())
+                .apply();
+        return info != null && info.isNewer() ? info : null;
+    }
+
+    static boolean markNotified(Context context, UpdateInfo info) {
+        if (info == null) return false;
+        Context app = context.getApplicationContext();
+        android.content.SharedPreferences prefs = app.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+        int last = prefs.getInt(KEY_LAST_NOTIFIED_VERSION, 0);
+        if (info.versionCode <= last) return false;
+        prefs.edit().putInt(KEY_LAST_NOTIFIED_VERSION, info.versionCode).apply();
+        return true;
     }
 
     private static UpdateInfo fetch() throws Exception {
