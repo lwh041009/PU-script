@@ -1,14 +1,14 @@
 {
-  "versionCode": 4,
-  "versionName": "1.2.1",
+  "versionCode": 5,
+  "versionName": "1.2.2",
   "title": "PU 脚本",
   "changelog": [
-    "支持每小时后台检查新版本",
-    "发现新版本后发送系统通知",
-    "优化本地预约报名执行"
+    "继续使用 Gitee 作为主更新源",
+    "保留 GitHub 和 JSDelivr 备用地址",
+    "更新版本至 1.2.2"
   ],
   "apkUrl": "https://gitee.com/luo-wanhong/PU-script-release/raw/master/PU-script.apk",
-  "sha256": "0a6a01d787139c39c1997e95ac70f49dce59cc7f2c469b2f3c76c25ed6f89920",
+  "sha256": "19ad24923a274911c95480068577b181b688a1045920fe4965b0f0629f30e8d2",
   "minVersionCode": 1,
   "force": false
 }
