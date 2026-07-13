@@ -1,0 +1,30 @@
+# Android and Gradle build output
+.gradle/
+build/
+**/build/
+local.properties
+
+# Packaged artifacts and generated media
+*.apk
+*.aab
+output/
+
+# Signing keys and local credentials
+*.jks
+*.keystore
+*.p12
+*.pem
+.env
+.env.*
+!.env.example
+
+# Local server runtime data: contains account passwords and tokens
+server/data/*
+!server/data/.gitkeep
+
+# IDE and OS files
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db

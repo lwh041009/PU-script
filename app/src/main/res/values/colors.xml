@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="app_bg">#F5F5F5</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="text_main">#222222</color>
+    <color name="text_muted">#8A8A8A</color>
+    <color name="primary">#FF7A1A</color>
+    <color name="primary_dark">#E76608</color>
+    <color name="danger">#EF5350</color>
+    <color name="line">#EEEEEE</color>
+</resources>
