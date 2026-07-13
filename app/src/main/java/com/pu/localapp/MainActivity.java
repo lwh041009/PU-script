@@ -260,6 +260,22 @@ public class MainActivity extends Activity {
         setContentView(root);
         showTab(0);
         loadActivityTypes();
+        clockHandler.postDelayed(() -> checkForUpdate(false), 900L);
+    }
+
+    private void checkForUpdate(boolean manual) {
+        UpdateChecker.check(this, manual, new UpdateChecker.Callback() {
+            @Override
+            public void onSuccess(UpdateChecker.UpdateInfo info) {
+                if (info != null && !isFinishing()) UpdateDialog.show(MainActivity.this, info);
+                else if (manual) toast("当前已是最新版本");
+            }
+
+            @Override
+            public void onError(Exception error) {
+                if (manual) toast("检查更新失败：" + message(error));
+            }
+        });
     }
 
     private void showTab(int tab) {

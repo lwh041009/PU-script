@@ -32,6 +32,7 @@ public class SettingsActivity extends Activity {
     private TextView currentText;
     private TextView rangeText;
     private TextView serverStatus;
+    private TextView updateStatus;
     private EditText percentInput;
     private EditText serverUrlInput;
     private EditText serverTokenInput;
@@ -137,6 +138,26 @@ public class SettingsActivity extends Activity {
         serverCard.addView(saveServer, saveLp);
         content.addView(serverCard);
 
+        content.addView(sectionTitle("版本更新"));
+        LinearLayout updateCard = card();
+        updateCard.addView(Ui.text(this, "PU 脚本", 17, Ui.TEXT, Typeface.BOLD));
+        updateStatus = Ui.text(this, "当前版本 v" + BuildConfig.VERSION_NAME + "（" + BuildConfig.VERSION_CODE + "）", 13, Ui.MUTED, Typeface.NORMAL);
+        LinearLayout.LayoutParams updateStatusLp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        updateStatusLp.setMargins(0, Ui.dp(this, 7), 0, 0);
+        updateCard.addView(updateStatus, updateStatusLp);
+        TextView updateDesc = Ui.text(this, "从 GitHub 获取版本信息，发现新版本后打开官方 APK 下载地址。", 13, Ui.MUTED, Typeface.NORMAL);
+        updateDesc.setLineSpacing(Ui.dp(this, 4), 1.0f);
+        LinearLayout.LayoutParams updateDescLp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        updateDescLp.setMargins(0, Ui.dp(this, 7), 0, 0);
+        updateCard.addView(updateDesc, updateDescLp);
+        Button checkUpdate = Ui.secondaryButton(this, "检查更新");
+        checkUpdate.setTextSize(Ui.fontSp(this, 14));
+        checkUpdate.setOnClickListener(v -> checkForUpdate());
+        LinearLayout.LayoutParams checkUpdateLp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, Ui.dp(this, 42));
+        checkUpdateLp.setMargins(0, Ui.dp(this, 12), 0, 0);
+        updateCard.addView(checkUpdate, checkUpdateLp);
+        content.addView(updateCard);
+
         content.addView(sectionTitle("预览"));
         preview = card();
         content.addView(preview);
@@ -144,6 +165,30 @@ public class SettingsActivity extends Activity {
         syncControlsFromScale();
         renderPreview();
         setContentView(page);
+    }
+
+    private void checkForUpdate() {
+        ProgressDialog dialog = ProgressDialog.show(this, "", "正在检查更新...", true, false);
+        UpdateChecker.check(this, true, new UpdateChecker.Callback() {
+            @Override
+            public void onSuccess(UpdateChecker.UpdateInfo info) {
+                dialog.dismiss();
+                if (info == null) {
+                    updateStatus.setText("当前已是最新版本 · v" + BuildConfig.VERSION_NAME);
+                    Toast.makeText(SettingsActivity.this, "当前已是最新版本", Toast.LENGTH_SHORT).show();
+                } else {
+                    updateStatus.setText("发现新版本 · v" + info.versionName);
+                    UpdateDialog.show(SettingsActivity.this, info);
+                }
+            }
+
+            @Override
+            public void onError(Exception error) {
+                dialog.dismiss();
+                updateStatus.setText("检查失败，请稍后重试");
+                Toast.makeText(SettingsActivity.this, "检查更新失败：" + message(error), Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     private TextView sectionTitle(String text) {

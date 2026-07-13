@@ -6,6 +6,10 @@ android {
     namespace "com.pu.localapp"
     compileSdk 35
 
+    buildFeatures {
+        buildConfig = true
+    }
+
     defaultConfig {
         applicationId "com.pu.localapp"
         minSdk 23
