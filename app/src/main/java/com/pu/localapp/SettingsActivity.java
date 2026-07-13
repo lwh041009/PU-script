@@ -145,7 +145,7 @@ public class SettingsActivity extends Activity {
         LinearLayout.LayoutParams updateStatusLp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         updateStatusLp.setMargins(0, Ui.dp(this, 7), 0, 0);
         updateCard.addView(updateStatus, updateStatusLp);
-        TextView updateDesc = Ui.text(this, "从 GitHub 获取版本信息，发现新版本后打开官方 APK 下载地址。", 13, Ui.MUTED, Typeface.NORMAL);
+        TextView updateDesc = Ui.text(this, "优先从 Gitee 获取版本信息，GitHub 作为备用下载源。", 13, Ui.MUTED, Typeface.NORMAL);
         updateDesc.setLineSpacing(Ui.dp(this, 4), 1.0f);
         LinearLayout.LayoutParams updateDescLp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         updateDescLp.setMargins(0, Ui.dp(this, 7), 0, 0);

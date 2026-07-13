@@ -16,6 +16,7 @@ import java.nio.charset.StandardCharsets;
 
 final class UpdateChecker {
     private static final String[] MANIFEST_URLS = {
+            "https://gitee.com/luo-wanhong/PU-script-release/raw/master/latest.json",
             "https://raw.githubusercontent.com/lwh041009/PU-script/main/update/latest.json",
             "https://cdn.jsdelivr.net/gh/lwh041009/PU-script@main/update/latest.json"
     };
@@ -124,7 +125,9 @@ final class UpdateChecker {
         connection.setRequestProperty("User-Agent", "PU-Script-Android-Update");
         int code = connection.getResponseCode();
         try {
-            if (code < 200 || code >= 300) throw new IllegalStateException("版本服务 HTTP " + code);
+            if (code < 200 || code >= 300) {
+                throw new IllegalStateException("版本服务 HTTP " + code);
+            }
             String text = readAll(connection.getInputStream());
             JSONObject json = new JSONObject(text);
             int versionCode = json.optInt("versionCode", 0);
