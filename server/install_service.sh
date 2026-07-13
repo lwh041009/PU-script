@@ -24,15 +24,49 @@ if [ ! -f "server.js" ] || [ ! -f "package.json" ]; then
   exit 1
 fi
 
+install_node() {
+  echo "正在安装 Node.js 20，请稍候..."
+
+  if command -v apt-get >/dev/null 2>&1; then
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update
+    apt-get install -y ca-certificates curl
+    curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+    apt-get install -y nodejs
+  elif command -v dnf >/dev/null 2>&1; then
+    dnf install -y ca-certificates curl
+    curl -fsSL https://rpm.nodesource.com/setup_20.x | bash -
+    dnf install -y nodejs
+  elif command -v yum >/dev/null 2>&1; then
+    yum install -y ca-certificates curl
+    curl -fsSL https://rpm.nodesource.com/setup_20.x | bash -
+    yum install -y nodejs
+  elif command -v apk >/dev/null 2>&1; then
+    apk add --no-cache nodejs npm
+  else
+    echo "无法识别当前 Linux 发行版，请手动安装 Node.js 18 或以上版本。"
+    exit 1
+  fi
+}
+
+if command -v node >/dev/null 2>&1; then
+  NODE_MAJOR="$(node -p "Number(process.versions.node.split('.')[0])")"
+  if [ "$NODE_MAJOR" -lt 18 ]; then
+    echo "当前 Node.js 版本过低：$(node -v)，将自动升级。"
+    install_node
+  fi
+else
+  install_node
+fi
+
 if ! command -v node >/dev/null 2>&1; then
-  echo "未检测到 Node.js。请先安装 Node.js 18 或以上版本。"
-  echo "Ubuntu/Debian 示例：curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && apt-get install -y nodejs"
+  echo "Node.js 安装失败，请检查服务器网络和软件源。"
   exit 1
 fi
 
 NODE_MAJOR="$(node -p "Number(process.versions.node.split('.')[0])")"
 if [ "$NODE_MAJOR" -lt 18 ]; then
-  echo "当前 Node.js 版本过低：$(node -v)。请升级到 Node.js 18 或以上。"
+  echo "Node.js 安装后版本仍低于 18：$(node -v)"
   exit 1
 fi
 
