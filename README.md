@@ -1,6 +1,8 @@
 # PU 脚本
 
-一个面向 PU 活动管理的原生 Android 应用，使用 Java + Android 原生 View/XML 开发，不使用 WebView 套壳。
+一个面向 PU 口袋校园的原生 Android 活动管理与预约报名脚本，使用 Java + Android 原生 View/XML 开发，不使用 WebView 套壳。
+
+它把 PU 口袋校园里的活动浏览、报名、我的活动、分数查询和预约执行整合到一个手机 App 中，并提供可选的 Linux 服务器预约端。
 
 ## 功能
 
