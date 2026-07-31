@@ -1,14 +1,14 @@
 {
-  "versionCode": 5,
-  "versionName": "1.2.2",
+  "versionCode": 6,
+  "versionName": "1.2.3",
   "title": "PU 脚本",
   "changelog": [
-    "继续使用 Gitee 作为主更新源",
-    "保留 GitHub 和 JSDelivr 备用地址",
-    "更新版本至 1.2.2"
+    "更新三个主界面的校园背景",
+    "优化首页活动卡片间距",
+    "更新版本至 1.2.3"
   ],
   "apkUrl": "https://gitee.com/luo-wanhong/PU-script-release/raw/master/PU-script.apk",
-  "sha256": "19ad24923a274911c95480068577b181b688a1045920fe4965b0f0629f30e8d2",
+  "sha256": "23f7b504f641318f89d21176cf4c2fafdb6ef270e955b5b043a60f2e1b0e92f2",
   "minVersionCode": 1,
   "force": false
 }

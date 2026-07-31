@@ -63,14 +63,14 @@ final class ActivityAdapter extends BaseAdapter {
         Models.Activity activity = data.get(position);
 
         FrameLayout row = new FrameLayout(context);
-        row.setPadding(Ui.dp(context, 14), Ui.dp(context, 7), Ui.dp(context, 14), Ui.dp(context, 11));
+        row.setPadding(Ui.dp(context, 12), Ui.dp(context, 5), Ui.dp(context, 12), Ui.dp(context, 8));
         row.setClipToPadding(false);
 
         LinearLayout card = new LinearLayout(context);
         card.setOrientation(LinearLayout.VERTICAL);
-        card.setPadding(Ui.dp(context, 14), Ui.dp(context, 13), Ui.dp(context, 14), Ui.dp(context, 12));
+        card.setPadding(Ui.dp(context, 12), Ui.dp(context, 10), Ui.dp(context, 12), Ui.dp(context, 10));
         card.setBackground(cardBg());
-        card.setElevation(Ui.dp(context, 2));
+        card.setElevation(Ui.dp(context, 1));
         card.setTranslationZ(0);
         card.setOnClickListener(v -> listener.onClick(activity));
         card.setOnLongClickListener(v -> listener.onLongClick(activity));
@@ -82,12 +82,12 @@ final class ActivityAdapter extends BaseAdapter {
         card.addView(top);
 
         FrameLayout imageWrap = new FrameLayout(context);
-        LinearLayout.LayoutParams iwlp = new LinearLayout.LayoutParams(Ui.dp(context, 104), Ui.dp(context, 104));
+        LinearLayout.LayoutParams iwlp = new LinearLayout.LayoutParams(Ui.dp(context, 92), Ui.dp(context, 92));
         imageWrap.setLayoutParams(iwlp);
         ImageView image = new ImageView(context);
         image.setScaleType(ImageView.ScaleType.CENTER_CROP);
         image.setAdjustViewBounds(false);
-        image.setPadding(Ui.dp(context, 6), Ui.dp(context, 10), Ui.dp(context, 6), Ui.dp(context, 6));
+        image.setPadding(Ui.dp(context, 5), Ui.dp(context, 8), Ui.dp(context, 5), Ui.dp(context, 5));
         image.setBackground(Ui.bg(Color.WHITE, 12, context));
         imageWrap.addView(image, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         TextView status = statusBadge(displayStatus(activity));
@@ -99,11 +99,11 @@ final class ActivityAdapter extends BaseAdapter {
         LinearLayout body = new LinearLayout(context);
         body.setOrientation(LinearLayout.VERTICAL);
         LinearLayout.LayoutParams blp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
-        blp.setMargins(Ui.dp(context, 14), Ui.dp(context, 3), 0, 0);
+        blp.setMargins(Ui.dp(context, 10), Ui.dp(context, 1), 0, 0);
         body.setLayoutParams(blp);
         top.addView(body);
 
-        TextView title = Ui.text(context, activity.name.isEmpty() ? "未知活动" : activity.name, 17, Ui.TEXT, Typeface.BOLD);
+        TextView title = Ui.text(context, activity.name.isEmpty() ? "未知活动" : activity.name, 16, Ui.TEXT, Typeface.BOLD);
         title.setMaxLines(2);
         title.setGravity(Gravity.LEFT);
         title.setLineSpacing(Ui.dp(context, 2), 1.0f);
@@ -111,7 +111,7 @@ final class ActivityAdapter extends BaseAdapter {
 
         TextView joinState = Ui.text(context, joinStateText(activity), 13, Ui.MUTED, Typeface.NORMAL);
         LinearLayout.LayoutParams jlp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        jlp.setMargins(0, Ui.dp(context, 12), 0, Ui.dp(context, 8));
+        jlp.setMargins(0, Ui.dp(context, 8), 0, Ui.dp(context, 6));
         joinState.setLayoutParams(jlp);
         body.addView(joinState);
 
@@ -125,14 +125,14 @@ final class ActivityAdapter extends BaseAdapter {
 
         View line = new DashedLine(context);
         LinearLayout.LayoutParams llp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, Ui.dp(context, 1));
-        llp.setMargins(0, Ui.dp(context, 14), 0, Ui.dp(context, 11));
+        llp.setMargins(0, Ui.dp(context, 10), 0, Ui.dp(context, 8));
         card.addView(line, llp);
 
         LinearLayout footer = new LinearLayout(context);
         footer.setOrientation(LinearLayout.HORIZONTAL);
         footer.setGravity(Gravity.CENTER_VERTICAL);
-        TextView count = Ui.text(context, "已报名 " + activity.joinUserCount + "/" + activity.allowUserCount, 13, Ui.MUTED, Typeface.NORMAL);
-        TextView date = Ui.text(context, TimeUtil.dateRange(activity), 13, Ui.MUTED, Typeface.NORMAL);
+        TextView count = Ui.text(context, "已报名 " + activity.joinUserCount + "/" + activity.allowUserCount, 12, Ui.MUTED, Typeface.NORMAL);
+        TextView date = Ui.text(context, TimeUtil.dateRange(activity), 12, Ui.MUTED, Typeface.NORMAL);
         date.setGravity(Gravity.RIGHT);
         footer.addView(count, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
         footer.addView(date, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
@@ -141,7 +141,7 @@ final class ActivityAdapter extends BaseAdapter {
     }
 
     private GradientDrawable cardBg() {
-        return Ui.strokeBg(Color.argb(246, 255, 255, 255), Ui.LINE_STRONG, 1, 14, context);
+        return Ui.strokeBg(Color.argb(246, 255, 255, 255), Ui.LINE_STRONG, 1, 16, context);
     }
 
     private TextView statusBadge(String text) {
@@ -153,9 +153,9 @@ final class ActivityAdapter extends BaseAdapter {
     }
 
     private TextView statChip(String text, int bg, int fg) {
-        TextView chip = Ui.text(context, text, 14, fg, Typeface.BOLD);
+        TextView chip = Ui.text(context, text, 13, fg, Typeface.BOLD);
         chip.setGravity(Gravity.CENTER);
-        chip.setPadding(Ui.dp(context, 10), Ui.dp(context, 5), Ui.dp(context, 10), Ui.dp(context, 5));
+        chip.setPadding(Ui.dp(context, 8), Ui.dp(context, 4), Ui.dp(context, 8), Ui.dp(context, 4));
         chip.setMinWidth(Ui.dp(context, 46));
         chip.setBackground(Ui.bg(bg, 7, context));
         return chip;
