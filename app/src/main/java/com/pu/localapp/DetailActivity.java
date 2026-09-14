@@ -865,8 +865,14 @@ public class DetailActivity extends Activity {
     private String signRuleText() {
         String sign = firstNonEmpty(rawText("signTypeName", "signWay", "signType"), "扫码签到(可提前60分钟)");
         String quit = firstNonEmpty(rawText("quitTypeName", "signOutWay", "quitType"), "需要签退(可提前30分钟)");
-        String apply = firstNonEmpty(rawText("applyTypeName", "joinTypeName", "enrollType"), "报名制（报名无需审核）");
+        String apply = firstNonEmpty(rawText("applyTypeName", "joinTypeName", "enrollType"), joinTypeText());
         return "报名方式： " + apply + "\n签到方式： " + sign + "\n签退情况： " + quit;
+    }
+
+    private String joinTypeText() {
+        if (activity != null && activity.joinType == 2) return "报名制（报名需审核）";
+        if (activity != null && activity.joinType == 3) return "抽签报名";
+        return "报名制（报名无需审核）";
     }
 
     private String signCountText() {

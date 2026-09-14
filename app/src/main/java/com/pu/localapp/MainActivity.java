@@ -526,6 +526,8 @@ public class MainActivity extends Activity {
         appendDateSearch(text, activity.endTime);
         appendSearch(text, activity.credit);
         appendSearch(text, activity.integrity);
+        appendSearch(text, activity.puAmount);
+        appendSearch(text, activity.joinTypeLabel());
         appendSearch(text, activity.allowUserCount);
         appendSearch(text, activity.joinUserCount);
         appendSearch(text, activity.signInUserCount);

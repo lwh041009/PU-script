@@ -53,6 +53,8 @@ final class Models {
         String endTime;
         String credit;
         String integrity;
+        String puAmount;
+        int joinType;
         int allowUserCount;
         int joinUserCount;
         int signInUserCount = -1;
@@ -89,6 +91,8 @@ final class Models {
             a.endTime = firstText(obj, "endTime", "activityEndTime");
             a.credit = firstText(obj, "credit", "score");
             a.integrity = firstText(obj, "integrity", "integrityValue", "puAmount", "signCount");
+            a.puAmount = firstText(obj, "puAmount");
+            a.joinType = firstInt(obj, "joinType");
             a.allowUserCount = firstInt(obj, "allowUserCount", "limitCount", "userCount");
             a.joinUserCount = firstInt(obj, "joinUserCount", "joinedCount", "applyCount");
             a.signInUserCount = firstOptionalInt(obj, "signInUserCount", "signedUserCount", "signedCount", "signUserCount", "checkInUserCount", "checkInCount", "attendanceCount", "actualSignCount");
@@ -124,6 +128,8 @@ final class Models {
             if (empty(endTime)) endTime = other.endTime;
             if (empty(credit)) credit = other.credit;
             if (empty(integrity)) integrity = other.integrity;
+            if (empty(puAmount)) puAmount = other.puAmount;
+            if (joinType == 0) joinType = other.joinType;
             if (allowUserCount == 0) allowUserCount = other.allowUserCount;
             if (joinUserCount == 0) joinUserCount = other.joinUserCount;
             if (signInUserCount < 0) signInUserCount = other.signInUserCount;
@@ -143,6 +149,16 @@ final class Models {
 
         boolean isFull() {
             return allowUserCount > 0 && joinUserCount >= allowUserCount;
+        }
+
+        boolean needsAudit() {
+            return joinType == 2;
+        }
+
+        String joinTypeLabel() {
+            if (joinType == 2) return "报名需审核";
+            if (joinType == 3) return "抽签报名";
+            return "";
         }
 
         boolean eligibleFor(Account account) {

@@ -1,14 +1,14 @@
 {
-  "versionCode": 6,
-  "versionName": "1.2.3",
+  "versionCode": 7,
+  "versionName": "1.2.4",
   "title": "PU 脚本",
   "changelog": [
-    "更新三个主界面的校园背景",
-    "优化首页活动卡片间距",
-    "更新版本至 1.2.3"
+    "需要审核的活动显示报名需审核标签",
+    "首页活动卡片改为更紧凑的横排样式",
+    "更新版本至 1.2.4"
   ],
   "apkUrl": "https://gitee.com/luo-wanhong/PU-script-release/raw/master/PU-script.apk",
-  "sha256": "23f7b504f641318f89d21176cf4c2fafdb6ef270e955b5b043a60f2e1b0e92f2",
+  "sha256": "ab2c4de67851a8f68a5485c61b421cdead16f87e408f2e551c704f1c0c252e7c",
   "minVersionCode": 1,
   "force": false
 }
