@@ -185,7 +185,11 @@ public class DetailActivity extends Activity {
         addSection("活动简介", firstNonEmpty(activity.description, "暂无简介"));
         addSection("活动标签", firstNonEmpty(rawText("tags", "tagName", "labelName"), "无"));
         addSection("活动报名与签到", signRuleText());
-        addSection("参与对象", targetText());
+        addSection("参与对象", activity.participationTarget());
+        addOptionalSection("允许参与院系", joinNames(activity.allowCollege));
+        addOptionalSection("允许参与年级", joinNames(activity.allowYear));
+        addOptionalSection("允许参与部落", joinNames(activity.allowTribe));
+        addOptionalSection("允许参与分支", joinNames(activity.allowBranch));
         addSection("参与人员分配", firstNonEmpty(rawText("allocation", "assignMode", "participantLimit"), "无限制"));
         addSection("联系方式", contactText());
         reserveBtn.setOnClickListener(v -> reserve());
@@ -425,6 +429,11 @@ public class DetailActivity extends Activity {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             view.setAutoSizeTextTypeUniformWithConfiguration(minSp, maxSp, 1, TypedValue.COMPLEX_UNIT_SP);
         }
+    }
+
+    private void addOptionalSection(String title, String value) {
+        if (value == null || value.trim().isEmpty()) return;
+        addSection(title, value);
     }
 
     private void addSection(String title, String value) {
@@ -895,12 +904,6 @@ public class DetailActivity extends Activity {
         return count < 0 ? "--" : String.valueOf(count);
     }
 
-    private String targetText() {
-        String college = joinNames(activity.allowCollege);
-        String year = joinNames(activity.allowYear);
-        return "活动院系： " + firstNonEmpty(college, "全部院系") + "\n活动年级： " + firstNonEmpty(year, "全部年级");
-    }
-
     private String contactText() {
         String person = firstNonEmpty(rawText("contact", "contactName", "contacts", "contactPerson"), activity.creatorName);
         String phone = firstNonEmpty(rawText("contactPhone", "phone", "mobile", "tel"));
@@ -931,17 +934,7 @@ public class DetailActivity extends Activity {
     }
 
     private String joinNames(JSONArray arr) {
-        if (arr == null || arr.length() == 0) return "";
-        StringBuilder builder = new StringBuilder();
-        for (int i = 0; i < arr.length(); i++) {
-            JSONObject obj = arr.optJSONObject(i);
-            if (obj == null) continue;
-            String name = Models.firstText(obj, "name", "title", "label");
-            if (name.isEmpty()) continue;
-            if (builder.length() > 0) builder.append("、");
-            builder.append(name);
-        }
-        return builder.toString();
+        return Models.joinNames(arr);
     }
 
     private String firstNonEmpty(String... values) {

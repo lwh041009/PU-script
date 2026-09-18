@@ -1,14 +1,14 @@
 {
-  "versionCode": 7,
-  "versionName": "1.2.4",
+  "versionCode": 8,
+  "versionName": "1.2.5",
   "title": "PU 脚本",
   "changelog": [
-    "需要审核的活动显示报名需审核标签",
-    "首页活动卡片改为更紧凑的横排样式",
-    "更新版本至 1.2.4"
+    "活动详情按网页版显示参与对象",
+    "修复按部落参与时部落名单不显示",
+    "更新版本至 1.2.5"
   ],
   "apkUrl": "https://gitee.com/luo-wanhong/PU-script-release/raw/master/PU-script.apk",
-  "sha256": "ab2c4de67851a8f68a5485c61b421cdead16f87e408f2e551c704f1c0c252e7c",
+  "sha256": "c6a779bc11d45baebc4fc099bc1e82d3840d5ffc7a7ba389584f2812b3d0d69a",
   "minVersionCode": 1,
   "force": false
 }

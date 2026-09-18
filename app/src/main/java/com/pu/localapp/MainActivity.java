@@ -535,6 +535,8 @@ public class MainActivity extends Activity {
         appendSearch(text, joinNames(activity.allowCollege));
         appendSearch(text, joinNames(activity.allowYear));
         appendSearch(text, joinNames(activity.allowTribe));
+        appendSearch(text, joinNames(activity.allowBranch));
+        appendSearch(text, activity.participationTarget());
         appendSearch(text, activity.raw == null ? "" : activity.raw.toString());
         return text.toString();
     }
@@ -585,17 +587,7 @@ public class MainActivity extends Activity {
     }
 
     private String joinNames(org.json.JSONArray arr) {
-        if (arr == null || arr.length() == 0) return "";
-        StringBuilder builder = new StringBuilder();
-        for (int i = 0; i < arr.length(); i++) {
-            org.json.JSONObject obj = arr.optJSONObject(i);
-            if (obj == null) continue;
-            String name = Models.firstText(obj, "name", "title", "label", "text", "value");
-            if (name.isEmpty()) continue;
-            if (builder.length() > 0) builder.append(' ');
-            builder.append(name);
-        }
-        return builder.toString();
+        return Models.joinNames(arr);
     }
 
     private void showSearchDialog() {

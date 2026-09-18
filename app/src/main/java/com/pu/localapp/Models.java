@@ -67,6 +67,8 @@ final class Models {
         JSONArray allowCollege;
         JSONArray allowYear;
         JSONArray allowTribe;
+        JSONArray allowBranch;
+        int allowUserType = -1;
         JSONObject raw;
         boolean detailLoaded;
         int myListType;
@@ -109,9 +111,19 @@ final class Models {
             if (empty(a.creatorName)) a.creatorName = objectText(obj, "college", "name");
             a.address = firstText(obj, "address", "location", "place");
             a.description = firstText(obj, "description", "content", "detail", "intro");
-            a.allowCollege = obj.optJSONArray("allowCollege");
-            a.allowYear = obj.optJSONArray("allowYear");
-            a.allowTribe = obj.optJSONArray("allowTribe");
+            a.allowCollege = firstArray(obj, "allowCollege", "allowCollegeName");
+            a.allowYear = firstArray(obj, "allowYear", "allowYearName");
+            a.allowTribe = firstArray(obj, "allowTribe", "allowTribeName", "tribeList");
+            if (a.allowTribe == null || a.allowTribe.length() == 0) {
+                JSONArray singleTribe = objectAsArray(obj, "tribe");
+                if (singleTribe != null) a.allowTribe = singleTribe;
+            }
+            a.allowBranch = firstArray(obj, "allowBranch", "allowBranchName", "branchList", "branchs");
+            if (a.allowBranch == null || a.allowBranch.length() == 0) {
+                JSONArray singleBranch = objectAsArray(obj, "branch");
+                if (singleBranch != null) a.allowBranch = singleBranch;
+            }
+            a.allowUserType = firstOptionalInt(obj, "allowUserType", "userType", "joinUserType", "allowType");
             return a;
         }
 
@@ -142,6 +154,8 @@ final class Models {
             if (allowCollege == null) allowCollege = other.allowCollege;
             if (allowYear == null) allowYear = other.allowYear;
             if (allowTribe == null) allowTribe = other.allowTribe;
+            if (allowBranch == null) allowBranch = other.allowBranch;
+            if (allowUserType < 0) allowUserType = other.allowUserType;
             if (raw == null) raw = other.raw;
             if (myListType == 0) myListType = other.myListType;
             if (empty(myStatus)) myStatus = other.myStatus;
@@ -163,6 +177,26 @@ final class Models {
 
         boolean eligibleFor(Account account) {
             return matchesList(allowCollege, account.cid) && matchesList(allowYear, account.yid) && (allowTribe == null || allowTribe.length() == 0);
+        }
+
+        String participationTarget() {
+            if (allowUserType == 0) return "不限对象";
+            if (allowUserType == 1) return "按院系年级参与";
+            if (allowUserType == 2) return "按部落参与";
+            if (allowUserType == 3) return "按分支参与";
+            boolean hasTribe = hasAllowList(allowTribe);
+            boolean hasBranch = hasAllowList(allowBranch);
+            boolean hasCollege = hasAllowList(allowCollege);
+            boolean hasYear = hasAllowList(allowYear);
+            if (hasTribe && !hasCollege && !hasYear && !hasBranch) return "按部落参与";
+            if (hasBranch && !hasCollege && !hasYear && !hasTribe) return "按分支参与";
+            if ((hasCollege || hasYear) && !hasTribe && !hasBranch) return "按院系年级参与";
+            if (hasTribe || hasBranch || hasCollege || hasYear) return "限定对象参与";
+            return "不限对象";
+        }
+
+        static boolean hasAllowList(JSONArray arr) {
+            return arr != null && arr.length() > 0;
         }
 
         boolean beforeJoinEnd(long now) {
@@ -273,6 +307,129 @@ final class Models {
     static int objectInt(JSONObject obj, String objectKey, String key) {
         JSONObject child = obj.optJSONObject(objectKey);
         return child == null ? 0 : child.optInt(key);
+    }
+
+    static JSONArray firstArray(JSONObject obj, String... keys) {
+        if (obj == null) return null;
+        for (String key : keys) {
+            if (!obj.has(key) || obj.isNull(key)) continue;
+            JSONArray parsed = asNamedArray(obj.opt(key));
+            if (parsed != null && parsed.length() > 0) return parsed;
+        }
+        return null;
+    }
+
+    static JSONArray objectAsArray(JSONObject obj, String objectKey) {
+        if (obj == null || !obj.has(objectKey) || obj.isNull(objectKey)) return null;
+        return asNamedArray(obj.opt(objectKey));
+    }
+
+    static JSONArray asNamedArray(Object value) {
+        if (value == null || value == JSONObject.NULL) return null;
+        if (value instanceof JSONArray) {
+            return normalizeNamedArray((JSONArray) value);
+        }
+        if (value instanceof JSONObject) {
+            JSONObject obj = (JSONObject) value;
+            if (hasNamedItem(obj)) {
+                JSONArray arr = new JSONArray();
+                arr.put(obj);
+                return arr;
+            }
+            for (String nested : new String[]{"list", "data", "items", "records"}) {
+                if (!obj.has(nested) || obj.isNull(nested)) continue;
+                JSONArray nestedArr = asNamedArray(obj.opt(nested));
+                if (nestedArr != null && nestedArr.length() > 0) return nestedArr;
+            }
+            return null;
+        }
+        String text = String.valueOf(value).trim();
+        if (text.isEmpty() || "null".equalsIgnoreCase(text) || "[]".equals(text)) return null;
+        if (text.startsWith("[")) {
+            try {
+                JSONArray arr = normalizeNamedArray(new JSONArray(text));
+                if (arr != null && arr.length() > 0) return arr;
+            } catch (Exception ignored) {
+            }
+        }
+        return namedSingleton(text);
+    }
+
+    static String joinNames(JSONArray arr) {
+        if (arr == null || arr.length() == 0) return "";
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < arr.length(); i++) {
+            String name = namedText(arr.opt(i));
+            if (name.isEmpty()) continue;
+            if (builder.length() > 0) builder.append("、");
+            builder.append(name);
+        }
+        return builder.toString();
+    }
+
+    private static JSONArray normalizeNamedArray(JSONArray arr) {
+        if (arr == null || arr.length() == 0) return null;
+        JSONArray out = new JSONArray();
+        for (int i = 0; i < arr.length(); i++) {
+            Object item = arr.opt(i);
+            if (item == null || item == JSONObject.NULL) continue;
+            if (item instanceof JSONArray) {
+                JSONArray nested = normalizeNamedArray((JSONArray) item);
+                if (nested == null) continue;
+                for (int j = 0; j < nested.length(); j++) out.put(nested.opt(j));
+                continue;
+            }
+            if (item instanceof JSONObject) {
+                JSONArray parsed = asNamedArray(item);
+                if (parsed == null) continue;
+                for (int j = 0; j < parsed.length(); j++) out.put(parsed.opt(j));
+                continue;
+            }
+            JSONArray singleton = namedSingleton(String.valueOf(item));
+            if (singleton != null) out.put(singleton.opt(0));
+        }
+        return out.length() == 0 ? null : out;
+    }
+
+    private static JSONArray namedSingleton(String text) {
+        if (text == null) return null;
+        text = text.trim();
+        if (text.isEmpty() || "null".equalsIgnoreCase(text) || "[]".equals(text) || "0".equals(text)) return null;
+        JSONObject obj = new JSONObject();
+        try {
+            obj.put("name", text);
+        } catch (Exception ignored) {
+            return null;
+        }
+        JSONArray arr = new JSONArray();
+        arr.put(obj);
+        return arr;
+    }
+
+    private static String namedText(Object value) {
+        if (value == null || value == JSONObject.NULL) return "";
+        if (value instanceof JSONArray) return joinNames((JSONArray) value);
+        if (value instanceof JSONObject) {
+            JSONObject obj = (JSONObject) value;
+            String name = firstText(obj, "name", "title", "label", "collegeName", "yearName", "tribeName", "deptName", "branchName", "orgName", "text", "value");
+            if (!emptyName(name)) return name;
+            if (!obj.has("id") || obj.isNull("id")) return "";
+            String id = String.valueOf(obj.opt("id")).trim();
+            if (id.isEmpty() || "0".equals(id) || "null".equalsIgnoreCase(id)) return "";
+            return id;
+        }
+        String text = String.valueOf(value).trim();
+        if (text.isEmpty() || "null".equalsIgnoreCase(text) || "0".equals(text)) return "";
+        return text;
+    }
+
+    private static boolean hasNamedItem(JSONObject obj) {
+        if (obj == null || obj.length() == 0) return false;
+        return !emptyName(namedText(obj));
+    }
+
+    private static boolean emptyName(String value) {
+        return value == null || value.trim().isEmpty();
     }
 
     static List<Activity> activitiesFromArray(JSONArray arr) {
