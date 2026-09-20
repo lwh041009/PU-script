@@ -1,14 +1,14 @@
 {
-  "versionCode": 9,
-  "versionName": "1.2.6",
+  "versionCode": 10,
+  "versionName": "1.2.7",
   "title": "PU 脚本",
   "changelog": [
-    "我的页面显示姓名、学院、年级、专业和班级",
-    "支持管理、切换和删除本机账号",
-    "我的活动改为分组紧凑卡片"
+    "首页筛选改为状态分段按钮和类型卡片",
+    "筛选弹窗改为换行标签，并显示可匹配数量",
+    "设置页重新排版，增加字体快捷档位"
   ],
   "apkUrl": "https://gitee.com/luo-wanhong/PU-script-release/raw/master/PU-script.apk",
-  "sha256": "b6639ee7c68eea7e0be15a447344ade03a91cb9fedebe16d1ec28e6ce3220a66",
+  "sha256": "b0cd96aa33c4c7e01ae63961acc4a5e46b80651b4df88bc7e84d0b8a9773d11f",
   "minVersionCode": 1,
   "force": false
 }

@@ -228,6 +228,108 @@ final class Ui {
         return chip;
     }
 
+    static TextView choiceChip(Context context, String text, boolean selected) {
+        TextView chip = text(context, text, 13, selected ? Color.WHITE : TEXT, selected ? Typeface.BOLD : Typeface.NORMAL);
+        chip.setGravity(Gravity.CENTER);
+        chip.setSingleLine(true);
+        chip.setEllipsize(TextUtils.TruncateAt.END);
+        chip.setPadding(dp(context, 12), dp(context, 8), dp(context, 12), dp(context, 8));
+        chip.setMinHeight(dp(context, 34));
+        chip.setBackground(ripple(
+                strokeBg(selected ? PRIMARY : Color.argb(248, 255, 255, 255), selected ? PRIMARY : LINE_STRONG, 1, 999, context),
+                Color.argb(30, 255, 122, 26)
+        ));
+        chip.setElevation(dp(context, selected ? 2 : 1));
+        return chip;
+    }
+
+    static TextView softChip(Context context, String text, boolean selected) {
+        TextView chip = text(context, text, 13, selected ? PRIMARY : TEXT, selected ? Typeface.BOLD : Typeface.NORMAL);
+        chip.setGravity(Gravity.CENTER);
+        chip.setSingleLine(true);
+        chip.setEllipsize(TextUtils.TruncateAt.END);
+        chip.setPadding(dp(context, 12), dp(context, 8), dp(context, 12), dp(context, 8));
+        chip.setMinHeight(dp(context, 34));
+        chip.setBackground(ripple(
+                strokeBg(selected ? PRIMARY_SOFT : Color.argb(248, 255, 255, 255), selected ? Color.rgb(255, 214, 184) : LINE_STRONG, 1, 999, context),
+                Color.argb(30, 255, 122, 26)
+        ));
+        return chip;
+    }
+
+    static Button circleButton(Context context, String text) {
+        Button button = button(context, text, SURFACE, TEXT);
+        button.setTextSize(fontSp(context, 22));
+        button.setBackground(ripple(strokeBg(SURFACE, LINE_STRONG, 1, 999, context), Color.argb(26, 255, 122, 26)));
+        button.setElevation(dp(context, 1));
+        return button;
+    }
+
+    static TextView sectionLabel(Context context, String text) {
+        TextView tv = text(context, text, 13, MUTED, Typeface.BOLD);
+        tv.setPadding(dp(context, 2), dp(context, 2), dp(context, 2), dp(context, 8));
+        tv.setLetterSpacing(0.04f);
+        return tv;
+    }
+
+    static class WrapLayout extends ViewGroup {
+        private final int hGap;
+        private final int vGap;
+
+        WrapLayout(Context context, int hGapDp, int vGapDp) {
+            super(context);
+            hGap = dp(context, hGapDp);
+            vGap = dp(context, vGapDp);
+        }
+
+        @Override
+        protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+            int width = Math.max(0, MeasureSpec.getSize(widthMeasureSpec) - getPaddingLeft() - getPaddingRight());
+            int x = 0;
+            int y = 0;
+            int rowH = 0;
+            int count = getChildCount();
+            for (int i = 0; i < count; i++) {
+                View child = getChildAt(i);
+                if (child.getVisibility() == GONE) continue;
+                measureChild(child, widthMeasureSpec, heightMeasureSpec);
+                int cw = child.getMeasuredWidth();
+                int ch = child.getMeasuredHeight();
+                if (x > 0 && x + cw > width) {
+                    x = 0;
+                    y += rowH + vGap;
+                    rowH = 0;
+                }
+                x += cw + hGap;
+                rowH = Math.max(rowH, ch);
+            }
+            int height = y + rowH + getPaddingTop() + getPaddingBottom();
+            setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec), resolveSize(Math.max(height, getSuggestedMinimumHeight()), heightMeasureSpec));
+        }
+
+        @Override
+        protected void onLayout(boolean changed, int l, int t, int r, int b) {
+            int width = r - l - getPaddingLeft() - getPaddingRight();
+            int x = getPaddingLeft();
+            int y = getPaddingTop();
+            int rowH = 0;
+            for (int i = 0; i < getChildCount(); i++) {
+                View child = getChildAt(i);
+                if (child.getVisibility() == GONE) continue;
+                int cw = child.getMeasuredWidth();
+                int ch = child.getMeasuredHeight();
+                if (x > getPaddingLeft() && x + cw > getPaddingLeft() + width) {
+                    x = getPaddingLeft();
+                    y += rowH + vGap;
+                    rowH = 0;
+                }
+                child.layout(x, y, x + cw, y + ch);
+                x += cw + hGap;
+                rowH = Math.max(rowH, ch);
+            }
+        }
+    }
+
     static void applySystemBars(View view) {
         final int left = view.getPaddingLeft();
         final int top = view.getPaddingTop();

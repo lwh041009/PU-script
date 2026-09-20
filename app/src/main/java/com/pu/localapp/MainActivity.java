@@ -346,32 +346,59 @@ public class MainActivity extends Activity {
         LinearLayout top = new LinearLayout(this);
         top.setOrientation(LinearLayout.VERTICAL);
         top.setPadding(Ui.dp(this, 16), 0, Ui.dp(this, 16), Ui.dp(this, 10));
+
+        LinearLayout header = new LinearLayout(this);
+        header.setOrientation(LinearLayout.HORIZONTAL);
+        header.setGravity(Gravity.CENTER_VERTICAL);
         LinearLayout title = Ui.pageTitle(this, "二课活动", "筛选可参加活动，提前预约报名");
-        top.addView(title, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, Ui.dp(this, 58)));
-
-        LinearLayout tools = new LinearLayout(this);
-        tools.setOrientation(LinearLayout.HORIZONTAL);
-        tools.setGravity(Gravity.CENTER_VERTICAL);
-
-        TextView activeFilter = Ui.statusPill(this, filterSummary(), Ui.PRIMARY_SOFT, Ui.PRIMARY);
-        activeFilter.setGravity(Gravity.LEFT | Gravity.CENTER_VERTICAL);
-        activeFilter.setPadding(Ui.dp(this, 14), Ui.dp(this, 7), Ui.dp(this, 14), Ui.dp(this, 7));
-        activeFilter.setSingleLine(true);
-        activeFilter.setEllipsize(TextUtils.TruncateAt.END);
-        tools.addView(activeFilter, new LinearLayout.LayoutParams(0, Ui.dp(this, 40), 1f));
+        header.addView(title, new LinearLayout.LayoutParams(0, Ui.dp(this, 58), 1f));
         ImageButton search = Ui.iconButton(this, android.R.drawable.ic_menu_search, !searchQuery.isEmpty(), "搜索活动");
         ImageButton refresh = Ui.iconButton(this, android.R.drawable.ic_popup_sync, false, "刷新活动");
-        ImageButton filter = Ui.iconButton(this, android.R.drawable.ic_menu_sort_by_size, !"全部".equals(selectedStatus) || !selectedTypeId.isEmpty(), "筛选活动");
-        LinearLayout.LayoutParams toolLp = new LinearLayout.LayoutParams(Ui.dp(this, 40), Ui.dp(this, 40));
-        toolLp.setMargins(Ui.dp(this, 8), 0, 0, 0);
-        tools.addView(search, toolLp);
-        LinearLayout.LayoutParams refreshLp = new LinearLayout.LayoutParams(Ui.dp(this, 40), Ui.dp(this, 40));
-        refreshLp.setMargins(Ui.dp(this, 8), 0, 0, 0);
-        tools.addView(refresh, refreshLp);
-        LinearLayout.LayoutParams filterLp = new LinearLayout.LayoutParams(Ui.dp(this, 40), Ui.dp(this, 40));
-        filterLp.setMargins(Ui.dp(this, 8), 0, 0, 0);
-        tools.addView(filter, filterLp);
-        top.addView(tools, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, Ui.dp(this, 40)));
+        LinearLayout.LayoutParams iconLp = new LinearLayout.LayoutParams(Ui.dp(this, 40), Ui.dp(this, 40));
+        iconLp.setMargins(Ui.dp(this, 8), 0, 0, 0);
+        header.addView(search, iconLp);
+        header.addView(refresh, iconLp);
+        top.addView(header);
+
+        LinearLayout statusBar = new LinearLayout(this);
+        statusBar.setOrientation(LinearLayout.HORIZONTAL);
+        statusBar.setGravity(Gravity.CENTER_VERTICAL);
+        statusBar.setPadding(Ui.dp(this, 4), Ui.dp(this, 4), Ui.dp(this, 4), Ui.dp(this, 4));
+        statusBar.setBackground(Ui.strokeBg(Color.argb(246, 255, 255, 255), Ui.LINE_STRONG, 1, 999, this));
+        LinearLayout.LayoutParams statusLp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, Ui.dp(this, 44));
+        statusLp.setMargins(0, Ui.dp(this, 12), 0, 0);
+        top.addView(statusBar, statusLp);
+
+        LinearLayout meta = new LinearLayout(this);
+        meta.setOrientation(LinearLayout.HORIZONTAL);
+        meta.setGravity(Gravity.CENTER_VERTICAL);
+        meta.setPadding(Ui.dp(this, 14), Ui.dp(this, 11), Ui.dp(this, 14), Ui.dp(this, 11));
+        meta.setBackground(Ui.strokeBg(Color.argb(246, 255, 255, 255), Ui.LINE_STRONG, 1, 16, this));
+        meta.setElevation(Ui.dp(this, 1));
+        LinearLayout typeBox = new LinearLayout(this);
+        typeBox.setOrientation(LinearLayout.VERTICAL);
+        TextView typeLabel = Ui.text(this, "活动类型", 11, Ui.MUTED, Typeface.NORMAL);
+        TextView typeChip = Ui.text(this, selectedTypeName(), 14, Ui.TEXT, Typeface.BOLD);
+        typeChip.setSingleLine(true);
+        typeChip.setEllipsize(TextUtils.TruncateAt.END);
+        typeBox.addView(typeLabel);
+        LinearLayout.LayoutParams typeNameLp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        typeNameLp.setMargins(0, Ui.dp(this, 4), 0, 0);
+        typeBox.addView(typeChip, typeNameLp);
+        meta.addView(typeBox, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+        TextView searchChip = Ui.statusPill(this, "", Ui.PRIMARY_SOFT, Ui.PRIMARY);
+        searchChip.setMaxWidth(Ui.dp(this, 120));
+        LinearLayout.LayoutParams searchChipLp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        searchChipLp.setMargins(Ui.dp(this, 8), 0, Ui.dp(this, 8), 0);
+        meta.addView(searchChip, searchChipLp);
+        TextView activeFilter = Ui.text(this, filterSummary(), 12, Ui.MUTED, Typeface.BOLD);
+        activeFilter.setGravity(Gravity.RIGHT | Gravity.CENTER_VERTICAL);
+        activeFilter.setSingleLine(true);
+        meta.addView(activeFilter, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        meta.setOnClickListener(v -> showFilterDialog());
+        LinearLayout.LayoutParams metaLp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        metaLp.setMargins(0, Ui.dp(this, 10), 0, 0);
+        top.addView(meta, metaLp);
         page.addView(top);
 
         FrameLayout listHost = new FrameLayout(this);
@@ -399,12 +426,61 @@ public class MainActivity extends Activity {
         page.addView(listHost, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
         content.addView(page);
 
+        final Runnable paintFilters = () -> {
+            statusBar.removeAllViews();
+            String[] statuses = new String[]{"全部", "可参加", "可报名"};
+            for (String status : statuses) {
+                boolean selected = status.equals(selectedStatus);
+                TextView chip = Ui.softChip(this, status, selected);
+                chip.setOnClickListener(v -> {
+                    if (status.equals(selectedStatus)) return;
+                    selectedStatus = status;
+                    adapter.submit(filteredActivities());
+                    paintActivityFilters(statusBar, typeChip, searchChip, activeFilter, adapter, empty);
+                    updateActivityEmptyState(empty, adapter.getCount(), allActivities.isEmpty(), null);
+                });
+                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, Ui.dp(this, 36), 1f);
+                lp.setMargins(Ui.dp(this, 2), 0, Ui.dp(this, 2), 0);
+                statusBar.addView(chip, lp);
+            }
+            paintActivityFilters(statusBar, typeChip, searchChip, activeFilter, adapter, empty);
+        };
         search.setOnClickListener(v -> showSearchDialog());
-        filter.setOnClickListener(v -> showFilterDialog());
+        searchChip.setOnClickListener(v -> showSearchDialog());
         refresh.setOnClickListener(v -> loadActivities(adapter, activeFilter, empty, refresh, true));
+        paintFilters.run();
         adapter.submit(filteredActivities());
         updateActivityEmptyState(empty, adapter.getCount(), allActivities.isEmpty(), null);
         if (allActivities.isEmpty()) loadActivities(adapter, activeFilter, empty, refresh, false);
+    }
+
+    private void paintActivityFilters(LinearLayout statusBar, TextView typeChip, TextView searchChip, TextView summary, ActivityAdapter adapter, View empty) {
+        if (statusBar.getChildCount() > 0) {
+            String[] statuses = new String[]{"全部", "可参加", "可报名"};
+            for (int i = 0; i < statusBar.getChildCount() && i < statuses.length; i++) {
+                View child = statusBar.getChildAt(i);
+                if (!(child instanceof TextView)) continue;
+                boolean selected = statuses[i].equals(selectedStatus);
+                TextView chip = (TextView) child;
+                chip.setText(statuses[i]);
+                chip.setTextColor(selected ? Ui.PRIMARY : Ui.TEXT);
+                chip.setTypeface(Typeface.DEFAULT, selected ? Typeface.BOLD : Typeface.NORMAL);
+                chip.setBackground(Ui.ripple(
+                        Ui.strokeBg(selected ? Ui.PRIMARY_SOFT : Color.TRANSPARENT, selected ? Color.rgb(255, 214, 184) : Color.TRANSPARENT, 1, 999, this),
+                        Color.argb(30, 255, 122, 26)
+                ));
+            }
+        }
+        boolean typed = selectedTypeId != null && !selectedTypeId.isEmpty();
+        typeChip.setText(selectedTypeName());
+        typeChip.setTextColor(typed ? Ui.PRIMARY : Ui.TEXT);
+        if (searchQuery == null || searchQuery.trim().isEmpty()) {
+            searchChip.setVisibility(View.GONE);
+        } else {
+            searchChip.setVisibility(View.VISIBLE);
+            searchChip.setText("搜索 " + searchQuery.trim());
+        }
+        summary.setText(filterSummary());
     }
 
     private void loadActivities(ActivityAdapter adapter, TextView summary, View empty, ImageButton refresh, boolean force) {
@@ -476,11 +552,15 @@ public class MainActivity extends Activity {
     }
 
     private String filterSummary() {
-        String typeName = "全部类型";
+        if (allActivities.isEmpty()) return "等待加载";
+        return filteredActivities().size() + " 项";
+    }
+
+    private String selectedTypeName() {
         for (Models.ActivityType type : activityTypes) {
-            if (type.id.equals(selectedTypeId)) typeName = type.name;
+            if (type.id.equals(selectedTypeId)) return type.name;
         }
-        return selectedStatus + " · " + typeName + (searchQuery.isEmpty() ? "" : " · 搜索：" + searchQuery);
+        return "全部类型";
     }
 
     private Models.ActivityType selectedType() {
@@ -602,8 +682,8 @@ public class MainActivity extends Activity {
     private void showSearchDialog() {
         LinearLayout box = new LinearLayout(this);
         box.setOrientation(LinearLayout.VERTICAL);
-        box.setPadding(Ui.dp(this, 18), Ui.dp(this, 10), Ui.dp(this, 18), 0);
-        TextView help = Ui.text(this, "可搜索活动名称、时间、活动类型、地点、简介、学分、人数、ID 等关键词。日期可输入 06.02、6月2日 或 2026-06-02。", 13, Ui.MUTED, Typeface.NORMAL);
+        box.setPadding(Ui.dp(this, 18), Ui.dp(this, 8), Ui.dp(this, 18), Ui.dp(this, 4));
+        TextView help = Ui.text(this, "可搜名称、时间、类型、地点、简介、学分、人数或 ID。日期可用 06.02、6月2日、2026-06-02。", 13, Ui.MUTED, Typeface.NORMAL);
         help.setLineSpacing(Ui.dp(this, 4), 1.0f);
         box.addView(help);
         EditText input = input("输入关键词");
@@ -611,6 +691,7 @@ public class MainActivity extends Activity {
         input.setMaxLines(2);
         input.setText(searchQuery);
         input.setSelection(input.getText().length());
+        input.setBackground(Ui.strokeBg(Color.rgb(255, 250, 246), Color.rgb(255, 214, 184), 1, 14, this));
         LinearLayout.LayoutParams ilp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, Ui.dp(this, 58));
         ilp.setMargins(0, Ui.dp(this, 14), 0, 0);
         box.addView(input, ilp);
@@ -663,20 +744,29 @@ public class MainActivity extends Activity {
     private void showFilterDialog() {
         LinearLayout box = new LinearLayout(this);
         box.setOrientation(LinearLayout.VERTICAL);
-        box.setPadding(Ui.dp(this, 18), Ui.dp(this, 10), Ui.dp(this, 18), 0);
+        box.setPadding(Ui.dp(this, 18), Ui.dp(this, 4), Ui.dp(this, 18), Ui.dp(this, 6));
 
         String[] statuses = new String[]{"全部", "可参加", "可报名"};
         final String[] pendingStatus = new String[]{selectedStatus};
         final String[] pendingType = new String[]{selectedTypeId};
+
+        TextView hint = Ui.text(this, "", 12, Ui.MUTED, Typeface.NORMAL);
         box.addView(label("活动状态"));
-        LinearLayout statusWrap = chipWrap();
-        box.addView(statusWrap);
+        Ui.WrapLayout statusWrap = new Ui.WrapLayout(this, 8, 8);
+        LinearLayout.LayoutParams statusLp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        statusLp.setMargins(0, Ui.dp(this, 4), 0, Ui.dp(this, 6));
+        box.addView(statusWrap, statusLp);
 
         box.addView(label("活动类型"));
         ScrollView typeScroll = new ScrollView(this);
-        LinearLayout typeWrap = chipWrap();
-        typeScroll.addView(typeWrap);
-        box.addView(typeScroll, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, Ui.dp(this, 210)));
+        typeScroll.setOverScrollMode(View.OVER_SCROLL_NEVER);
+        Ui.WrapLayout typeWrap = new Ui.WrapLayout(this, 8, 8);
+        typeWrap.setPadding(0, Ui.dp(this, 2), 0, Ui.dp(this, 6));
+        typeScroll.addView(typeWrap, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        box.addView(typeScroll, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, Ui.dp(this, 240)));
+        LinearLayout.LayoutParams hintLp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        hintLp.setMargins(0, Ui.dp(this, 8), 0, 0);
+        box.addView(hint, hintLp);
 
         final Runnable[] refresh = new Runnable[1];
         refresh[0] = () -> {
@@ -688,19 +778,25 @@ public class MainActivity extends Activity {
                 });
             }
             typeWrap.removeAllViews();
-            List<Models.ActivityType> types = activityTypes.isEmpty() ? new ArrayList<>() : activityTypes;
-            if (types.isEmpty()) types.add(new Models.ActivityType("", "全部类型"));
+            List<Models.ActivityType> types = new ArrayList<>();
+            if (!activityTypes.isEmpty()) types.addAll(activityTypes);
+            boolean hasAll = false;
+            for (Models.ActivityType type : types) {
+                if (type.id == null || type.id.isEmpty()) hasAll = true;
+            }
+            if (!hasAll) types.add(0, new Models.ActivityType("", "全部类型"));
             for (Models.ActivityType type : types) {
                 addChoiceChip(typeWrap, type.name, type.id.equals(pendingType[0]), () -> {
                     pendingType[0] = type.id;
                     refresh[0].run();
                 });
             }
+            hint.setText("当前可看到 " + countForFilter(pendingStatus[0], pendingType[0]) + " 项活动");
         };
         refresh[0].run();
 
-        new AlertDialog.Builder(this)
-                .setTitle("筛选")
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setTitle("筛选活动")
                 .setView(box)
                 .setNegativeButton("重置", (d, w) -> {
                     selectedStatus = "全部";
@@ -712,32 +808,35 @@ public class MainActivity extends Activity {
                     selectedTypeId = pendingType[0];
                     showTab(0);
                 })
-                .show();
+                .create();
+        dialog.show();
+        if (dialog.getWindow() != null) {
+            int width = Math.max(Ui.dp(this, 320), getResources().getDisplayMetrics().widthPixels - Ui.dp(this, 32));
+            dialog.getWindow().setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT);
+        }
     }
 
-    private LinearLayout chipWrap() {
-        LinearLayout wrap = new LinearLayout(this);
-        wrap.setOrientation(LinearLayout.VERTICAL);
-        wrap.setPadding(0, Ui.dp(this, 2), 0, Ui.dp(this, 4));
-        return wrap;
+    private int countForFilter(String status, String typeId) {
+        String oldStatus = selectedStatus;
+        String oldType = selectedTypeId;
+        selectedStatus = status;
+        selectedTypeId = typeId;
+        int count = filteredActivities().size();
+        selectedStatus = oldStatus;
+        selectedTypeId = oldType;
+        return count;
     }
 
-    private void addChoiceChip(LinearLayout parent, String text, boolean selected, Runnable onClick) {
-        TextView chip = Ui.text(this, text, 14, selected ? android.graphics.Color.WHITE : Ui.TEXT, selected ? Typeface.BOLD : Typeface.NORMAL);
-        chip.setGravity(Gravity.CENTER);
-        chip.setSingleLine(true);
-        chip.setEllipsize(TextUtils.TruncateAt.END);
-        chip.setPadding(Ui.dp(this, 12), 0, Ui.dp(this, 12), 0);
-        chip.setBackground(Ui.ripple(Ui.strokeBg(selected ? Ui.PRIMARY : Color.argb(248, 255, 255, 255), selected ? Ui.PRIMARY : Ui.LINE_STRONG, 1, 999, this), Color.argb(28, 255, 122, 26)));
+    private void addChoiceChip(ViewGroup parent, String text, boolean selected, Runnable onClick) {
+        TextView chip = Ui.choiceChip(this, text, selected);
         chip.setOnClickListener(v -> onClick.run());
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, Ui.dp(this, 38));
-        lp.setMargins(0, Ui.dp(this, 7), 0, 0);
-        parent.addView(chip, lp);
+        parent.addView(chip, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, Ui.dp(this, 34)));
     }
 
     private TextView label(String text) {
-        TextView tv = Ui.text(this, text, 15, Ui.TEXT, Typeface.BOLD);
-        tv.setPadding(0, Ui.dp(this, 12), 0, Ui.dp(this, 4));
+        TextView tv = Ui.text(this, text, 13, Ui.MUTED, Typeface.BOLD);
+        tv.setPadding(0, Ui.dp(this, 10), 0, Ui.dp(this, 2));
+        tv.setLetterSpacing(0.04f);
         return tv;
     }
 
