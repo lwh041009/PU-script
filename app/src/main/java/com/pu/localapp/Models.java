@@ -34,6 +34,9 @@ final class Models {
         long yid;
         String collegeName;
         String yearName;
+        String realName;
+        String className;
+        String majorName;
         long updatedAt;
 
         String key() {
@@ -270,6 +273,56 @@ final class Models {
         int memberCount = -1;
         int signInCount = -1;
         int signOutCount = -1;
+    }
+
+    static void applyUserProfile(Account account, JSONObject obj) {
+        if (account == null || obj == null) return;
+        JSONObject data = obj.optJSONObject("data");
+        JSONObject root = data != null ? data : obj;
+        JSONObject[] sources = new JSONObject[]{
+                root.optJSONObject("baseUserInfo"),
+                root.optJSONObject("userInfo"),
+                root.optJSONObject("user"),
+                root.optJSONObject("info"),
+                root.optJSONObject("student"),
+                root
+        };
+        for (JSONObject src : sources) {
+            if (src == null) continue;
+            if (account.cid <= 0) {
+                long cid = src.optLong("cid", src.optLong("collegeId"));
+                if (cid <= 0) cid = objectInt(src, "college", "id");
+                if (cid <= 0) cid = objectInt(src, "collegeInfo", "id");
+                if (cid > 0) account.cid = cid;
+            }
+            if (account.yid <= 0) {
+                long yid = src.optLong("yid", src.optLong("yearId"));
+                if (yid <= 0) yid = objectInt(src, "year", "id");
+                if (yid <= 0) yid = objectInt(src, "grade", "id");
+                if (yid > 0) account.yid = yid;
+            }
+            account.realName = preferName(account.realName, profileText(src, "realName", "realname", "trueName", "xm", "nickName"));
+            if (account.realName != null && account.realName.equals(account.username)) account.realName = "";
+            account.collegeName = preferName(account.collegeName, profileText(src, "collegeName", "college", "academyName", "departmentName", "facultyName", "yxmc", "orgName", "cname"));
+            account.yearName = preferName(account.yearName, profileText(src, "yearName", "gradeName", "grade", "year", "njmc", "yname", "enrollmentYear"));
+            account.className = preferName(account.className, profileText(src, "className", "clazzName", "class", "bjmc", "classInfo", "adminClassName"));
+            account.majorName = preferName(account.majorName, profileText(src, "majorName", "major", "zymc", "specialty", "specialtyName", "profession", "professionName", "zy"));
+        }
+    }
+
+    static String profileText(JSONObject obj, String... keys) {
+        String direct = firstText(obj, keys);
+        if (!emptyName(direct)) return direct;
+        for (String key : keys) {
+            String nested = objectText(obj, key, "name", "title", "label", "collegeName", "yearName", "className", "majorName", "realName");
+            if (!emptyName(nested)) return nested;
+        }
+        return "";
+    }
+
+    static String preferName(String current, String incoming) {
+        if (current != null && !current.trim().isEmpty() && !"null".equalsIgnoreCase(current.trim())) return current.trim();
+        return incoming == null ? "" : incoming.trim();
     }
 
     static String firstText(JSONObject obj, String... keys) {

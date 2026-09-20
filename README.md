@@ -114,6 +114,7 @@ curl -i -H "X-Server-Token: 你的密钥" http://127.0.0.1:8787/health
 GitHub 主仓库：
 
 <https://github.com/lwh041009/PU-script>
+每次发版都同步更新 GitHub 源码仓和 Gitee 更新仓（latest.json 与 PU-script.apk）。
 
 ## 免责声明
 

@@ -63,10 +63,8 @@ final class PuApi {
         account.token = data == null ? "" : data.optString("token");
         account.cid = baseUser == null ? 0 : baseUser.optLong("cid");
         account.yid = baseUser == null ? 0 : baseUser.optLong("yid");
-        if (baseUser != null) {
-            account.collegeName = Models.firstText(baseUser, "collegeName", "college", "academyName", "departmentName", "department", "facultyName", "yxmc", "cname", "orgName");
-            account.yearName = Models.firstText(baseUser, "yearName", "gradeName", "grade", "year", "njmc", "yname", "enrollmentYear");
-        }
+        if (data != null) Models.applyUserProfile(account, data);
+        if (baseUser != null) Models.applyUserProfile(account, baseUser);
         return db.upsertAccount(account);
     }
 

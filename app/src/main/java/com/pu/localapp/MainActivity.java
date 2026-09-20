@@ -27,6 +27,7 @@ import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.HorizontalScrollView;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ScrollView;
@@ -54,6 +55,7 @@ public class MainActivity extends Activity {
     private final List<Models.Activity> myActivities = new ArrayList<>();
     private final List<Models.Reservation> localReservations = new ArrayList<>();
     private final List<Models.ActivityType> activityTypes = new ArrayList<>();
+    private final ImageLoader imageLoader = new ImageLoader();
     private LinearLayout myStatusTabs;
     private LinearLayout myListView;
     private HorizontalScrollView myStatusScroll;
@@ -118,9 +120,16 @@ public class MainActivity extends Activity {
         LinearLayout page = new LinearLayout(this);
         page.setOrientation(LinearLayout.VERTICAL);
         page.setGravity(Gravity.CENTER_HORIZONTAL);
-        page.setPadding(Ui.dp(this, 24), Ui.dp(this, 64), Ui.dp(this, 24), Ui.dp(this, 24));
+        page.setPadding(Ui.dp(this, 24), Ui.dp(this, 36), Ui.dp(this, 24), Ui.dp(this, 24));
         page.setBackgroundResource(R.drawable.bg_login);
         Ui.applySystemBars(page);
+        if (account != null) {
+            Button back = Ui.secondaryButton(this, "返回当前账号");
+            back.setOnClickListener(v -> showMain());
+            LinearLayout.LayoutParams backLp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, Ui.dp(this, 42));
+            backLp.setMargins(0, 0, 0, Ui.dp(this, 14));
+            page.addView(back, backLp);
+        }
 
         TextView brand = Ui.statusPill(this, "本地安卓工具", Ui.PRIMARY_SOFT, Ui.PRIMARY);
         page.addView(brand);
@@ -161,7 +170,7 @@ public class MainActivity extends Activity {
         loginLp.setMargins(0, Ui.dp(this, 18), 0, 0);
         card.addView(login, loginLp);
 
-        Button switchAccount = Ui.secondaryButton(this, "选择已保存账号");
+        Button switchAccount = Ui.secondaryButton(this, "管理已保存账号");
         LinearLayout.LayoutParams slp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, Ui.dp(this, 46));
         slp.setMargins(0, Ui.dp(this, 12), 0, 0);
         card.addView(switchAccount, slp);
@@ -760,13 +769,13 @@ public class MainActivity extends Activity {
     private void showMyActivitiesPage() {
         LinearLayout page = new LinearLayout(this);
         page.setOrientation(LinearLayout.VERTICAL);
-        page.setPadding(Ui.dp(this, 14), Ui.dp(this, 18), Ui.dp(this, 14), 0);
+        page.setPadding(Ui.dp(this, 14), Ui.dp(this, 14), Ui.dp(this, 14), 0);
         page.setBackgroundResource(R.drawable.bg_my_activities);
 
         LinearLayout top = new LinearLayout(this);
         top.setGravity(Gravity.CENTER_VERTICAL);
-        LinearLayout title = Ui.pageTitle(this, "我的活动", "查看报名记录和预约执行反馈");
-        top.addView(title, new LinearLayout.LayoutParams(0, Ui.dp(this, 58), 1f));
+        LinearLayout title = Ui.pageTitle(this, "我的活动", "预约、报名和执行结果");
+        top.addView(title, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
         page.addView(top);
 
         ScrollView scroll = new ScrollView(this);
@@ -786,7 +795,9 @@ public class MainActivity extends Activity {
         statusScroll.setOverScrollMode(View.OVER_SCROLL_NEVER);
         statusScroll.addView(statusTabs);
         myStatusScroll = statusScroll;
-        page.addView(statusScroll, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, Ui.dp(this, 54)));
+        LinearLayout.LayoutParams statusLp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        statusLp.setMargins(0, Ui.dp(this, 12), 0, Ui.dp(this, 8));
+        page.addView(statusScroll, statusLp);
 
         page.addView(scroll, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
         content.addView(page);
@@ -798,18 +809,16 @@ public class MainActivity extends Activity {
 
     private void addMyStatusTab(LinearLayout parent, String status) {
         boolean selected = status.equals(mySelectedStatus);
-        LinearLayout tab = new LinearLayout(this);
-        tab.setOrientation(LinearLayout.VERTICAL);
-        tab.setGravity(Gravity.CENTER);
-        tab.setPadding(Ui.dp(this, 10), 0, Ui.dp(this, 10), 0);
-        TextView text = Ui.text(this, status, 17, selected ? Ui.TEXT : Ui.MUTED, selected ? Typeface.BOLD : Typeface.NORMAL);
+        int count = myTabCount(status);
+        String label = count > 0 ? status + " " + count : status;
+        TextView text = Ui.text(this, label, 13, selected ? Ui.PRIMARY : Ui.TEXT, selected ? Typeface.BOLD : Typeface.NORMAL);
         text.setGravity(Gravity.CENTER);
-        tab.addView(text, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, 0, 1f));
-        View underline = new View(this);
-        underline.setBackground(Ui.bg(selected ? Ui.PRIMARY : android.graphics.Color.TRANSPARENT, 3, this));
-        LinearLayout.LayoutParams ulp = new LinearLayout.LayoutParams(Ui.dp(this, 24), Ui.dp(this, 4));
-        tab.addView(underline, ulp);
-        tab.setOnClickListener(v -> {
+        text.setPadding(Ui.dp(this, 12), Ui.dp(this, 8), Ui.dp(this, 12), Ui.dp(this, 8));
+        text.setBackground(Ui.ripple(
+                Ui.strokeBg(selected ? Ui.PRIMARY_SOFT : Color.argb(248, 255, 255, 255), selected ? Color.rgb(255, 214, 184) : Ui.LINE_STRONG, 1, 999, this),
+                Color.argb(30, 255, 122, 26)
+        ));
+        text.setOnClickListener(v -> {
             mySelectedStatus = status;
             refreshMyStatusTabs();
             if (myListView != null) renderMyActivities(myListView, null);
@@ -817,7 +826,9 @@ public class MainActivity extends Activity {
                 if (myStatusScroll != null) myStatusScroll.smoothScrollTo(Math.max(0, v.getLeft() - Ui.dp(this, 32)), 0);
             });
         });
-        parent.addView(tab, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        lp.setMargins(0, 0, Ui.dp(this, 8), 0);
+        parent.addView(text, lp);
     }
 
     private void refreshMyStatusTabs() {
@@ -832,13 +843,13 @@ public class MainActivity extends Activity {
             try {
                 syncServerReservations();
                 ArrayList<Models.Activity> merged = new ArrayList<>();
-                try {
-                    mergeActivities(merged, api.getMyActivities(account, 5, 120), 5, "报名待审核");
-                } catch (Exception ignored) {
-                }
-                try {
-                    mergeActivities(merged, api.getMyActivities(account, 1, 120), 1, "未开始");
-                } catch (Exception ignored) {
+                int[] types = new int[]{5, 1, 2, 3};
+                String[] labels = new String[]{"报名待审核", "未开始", "进行中", "已结束"};
+                for (int i = 0; i < types.length; i++) {
+                    try {
+                        mergeActivities(merged, api.getMyActivities(account, types[i], 120), types[i], labels[i]);
+                    } catch (Exception ignored) {
+                    }
                 }
                 runOnUiThread(() -> {
                     localReservations.clear();
@@ -854,7 +865,7 @@ public class MainActivity extends Activity {
     }
 
     private String[] myTabs() {
-        return new String[]{"全部", "未开始", "报名待审核", "预约待执行", "预约已执行", "预约失败", "预约已取消"};
+        return new String[]{"全部", "预约", "待审核", "未开始", "进行中", "已结束"};
     }
 
     private void syncServerReservations() {
@@ -907,29 +918,85 @@ public class MainActivity extends Activity {
             list.addView(Ui.emptyState(this, placeholder, "正在同步已报名活动和本地预约记录"), new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, Ui.dp(this, 220)));
             return;
         }
-        int count = 0;
-        for (Models.Reservation r : localReservations) {
-            String label = reservationStatusText(r.status);
-            if (!matchesMyFilter(label)) continue;
-            count++;
-            list.addView(reservationCard(r, label));
+        java.util.ArrayList<Models.Reservation> reservations = new java.util.ArrayList<>(localReservations);
+        java.util.Collections.sort(reservations, (a, b) -> {
+            int pa = "pending".equals(a.status) ? 0 : 1;
+            int pb = "pending".equals(b.status) ? 0 : 1;
+            if (pa != pb) return pa - pb;
+            return pa == 0 ? Long.compare(a.runAt, b.runAt) : Long.compare(b.runAt, a.runAt);
+        });
+        java.util.ArrayList<Models.Activity> activities = new java.util.ArrayList<>(myActivities);
+        java.util.Collections.sort(activities, (a, b) -> Long.compare(myActivitySortKey(b), myActivitySortKey(a)));
+
+        java.util.ArrayList<Models.Reservation> shownReservations = new java.util.ArrayList<>();
+        for (Models.Reservation r : reservations) {
+            if (matchesMyFilter(reservationStatusText(r.status))) shownReservations.add(r);
         }
-        for (Models.Activity a : myActivities) {
-            String label = myStatusLabel(a);
-            if (!matchesMyFilter(label)) continue;
-            count++;
-            list.addView(myCard(a));
+        java.util.ArrayList<Models.Activity> shownActivities = new java.util.ArrayList<>();
+        for (Models.Activity a : activities) {
+            if (matchesMyFilter(myStatusLabel(a))) shownActivities.add(a);
         }
+        int count = shownReservations.size() + shownActivities.size();
         if (count == 0) {
-            String title = myActivities.isEmpty() && localReservations.isEmpty() ? "暂无活动记录" : "当前状态暂无活动";
-            String message = myActivities.isEmpty() && localReservations.isEmpty() ? "报名或预约后会显示在这里" : "切换上方状态筛选可以查看其他记录";
+            String title = myActivities.isEmpty() && localReservations.isEmpty() ? "暂无活动记录" : "当前分类暂无内容";
+            String message = myActivities.isEmpty() && localReservations.isEmpty() ? "报名或预约后会显示在这里" : "切换上方分类可以查看其他记录";
             list.addView(Ui.emptyState(this, title, message), new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, Ui.dp(this, 220)));
+            return;
+        }
+        boolean grouped = "全部".equals(mySelectedStatus);
+        if (!shownReservations.isEmpty()) {
+            if (grouped) list.addView(sectionLabel("预约", shownReservations.size() + " 条"));
+            for (Models.Reservation r : shownReservations) {
+                list.addView(reservationCard(r, reservationStatusText(r.status)));
+            }
+        }
+        if (!shownActivities.isEmpty()) {
+            if (grouped) list.addView(sectionLabel("已报名", shownActivities.size() + " 条"));
+            for (Models.Activity a : shownActivities) list.addView(myCard(a));
         }
     }
 
     private boolean matchesMyFilter(String label) {
         if ("全部".equals(mySelectedStatus)) return true;
+        if ("预约".equals(mySelectedStatus)) return label != null && label.startsWith("预约");
+        if ("待审核".equals(mySelectedStatus)) return "报名待审核".equals(label);
         return mySelectedStatus.equals(label);
+    }
+
+    private int myTabCount(String status) {
+        int count = 0;
+        for (Models.Reservation r : localReservations) {
+            if (tabMatchesStatus(status, reservationStatusText(r.status))) count++;
+        }
+        for (Models.Activity a : myActivities) {
+            if (tabMatchesStatus(status, myStatusLabel(a))) count++;
+        }
+        return count;
+    }
+
+    private boolean tabMatchesStatus(String tab, String label) {
+        String old = mySelectedStatus;
+        mySelectedStatus = tab;
+        boolean match = matchesMyFilter(label);
+        mySelectedStatus = old;
+        return match;
+    }
+
+    private long myActivitySortKey(Models.Activity activity) {
+        long joinStart = TimeUtil.parseMillis(activity.joinStartTime);
+        if (joinStart > 0) return joinStart;
+        long start = TimeUtil.parseMillis(activity.startTime);
+        return start > 0 ? start : activity.id;
+    }
+
+    private View sectionLabel(String title, String sub) {
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setPadding(Ui.dp(this, 4), Ui.dp(this, 10), Ui.dp(this, 4), Ui.dp(this, 6));
+        row.addView(Ui.text(this, title, 14, Ui.TEXT, Typeface.BOLD), new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+        row.addView(Ui.text(this, sub, 12, Ui.MUTED, Typeface.NORMAL));
+        return row;
     }
 
     private boolean containsAny(String text, String... needles) {
@@ -943,56 +1010,105 @@ public class MainActivity extends Activity {
     private View myCard(Models.Activity a) {
         LinearLayout card = new LinearLayout(this);
         card.setOrientation(LinearLayout.VERTICAL);
-        card.setPadding(Ui.dp(this, 15), Ui.dp(this, 14), Ui.dp(this, 15), Ui.dp(this, 14));
+        card.setPadding(Ui.dp(this, 10), Ui.dp(this, 10), Ui.dp(this, 10), Ui.dp(this, 10));
         card.setBackground(Ui.strokeBg(Color.argb(246, 255, 255, 255), Ui.LINE_STRONG, 1, 14, this));
-        card.setElevation(Ui.dp(this, 2));
+        card.setElevation(Ui.dp(this, 1));
         card.setOnClickListener(v -> openDetail(a));
-        TextView title = Ui.text(this, a.name, 17, Ui.TEXT, Typeface.BOLD);
+
+        LinearLayout top = new LinearLayout(this);
+        top.setOrientation(LinearLayout.HORIZONTAL);
+        top.setGravity(Gravity.TOP);
+        card.addView(top);
+
+        ImageView image = new ImageView(this);
+        image.setScaleType(ImageView.ScaleType.CENTER_CROP);
+        image.setBackground(Ui.bg(Color.WHITE, 10, this));
+        LinearLayout.LayoutParams iwlp = new LinearLayout.LayoutParams(Ui.dp(this, 72), Ui.dp(this, 72));
+        top.addView(image, iwlp);
+        imageLoader.load(image, a.coverUrl);
+
+        LinearLayout body = new LinearLayout(this);
+        body.setOrientation(LinearLayout.VERTICAL);
+        LinearLayout.LayoutParams blp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+        blp.setMargins(Ui.dp(this, 10), 0, 0, 0);
+        top.addView(body, blp);
+
+        TextView title = Ui.text(this, a.name == null || a.name.isEmpty() ? "未知活动" : a.name, 15, Ui.TEXT, Typeface.BOLD);
         title.setMaxLines(2);
         title.setEllipsize(TextUtils.TruncateAt.END);
-        TextView meta = Ui.statusPill(this, myStatusLabel(a) + " · " + TimeUtil.dateRange(a), Ui.PRIMARY_SOFT, Ui.PRIMARY);
-        TextView address = Ui.text(this, "地址：" + firstNonEmpty(a.address, "暂无地址"), 13, Ui.MUTED, Typeface.NORMAL);
-        TextView id = Ui.text(this, "ID " + a.id, 12, Ui.MUTED, Typeface.NORMAL);
+        body.addView(title);
+
+        LinearLayout meta = new LinearLayout(this);
+        meta.setOrientation(LinearLayout.HORIZONTAL);
+        meta.setGravity(Gravity.CENTER_VERTICAL);
+        LinearLayout.LayoutParams mlp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        mlp.setMargins(0, Ui.dp(this, 6), 0, 0);
+        body.addView(meta, mlp);
+        String status = myStatusLabel(a);
+        meta.addView(Ui.statusPill(this, status, myStatusBg(status), myStatusFg(status)));
+
+        TextView time = Ui.text(this, TimeUtil.dateRange(a), 12, Ui.MUTED, Typeface.NORMAL);
+        time.setSingleLine(true);
+        time.setEllipsize(TextUtils.TruncateAt.END);
+        LinearLayout.LayoutParams tlp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        tlp.setMargins(0, Ui.dp(this, 6), 0, 0);
+        body.addView(time, tlp);
+
+        if (canCancelMyActivity(a)) {
             Button cancel = Ui.button(this, "取消报名", Ui.DANGER, android.graphics.Color.WHITE);
             cancel.setBackground(Ui.ripple(Ui.bg(Ui.DANGER, 14, this), Color.argb(44, 255, 255, 255)));
-        cancel.setOnClickListener(v -> cancelActivity(a));
-        card.addView(title);
-        LinearLayout.LayoutParams metaLp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        metaLp.setMargins(0, Ui.dp(this, 10), 0, 0);
-        card.addView(meta, metaLp);
-        LinearLayout.LayoutParams addressLp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        addressLp.setMargins(0, Ui.dp(this, 10), 0, 0);
-        card.addView(address, addressLp);
-        LinearLayout.LayoutParams idLp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        idLp.setMargins(0, Ui.dp(this, 6), 0, 0);
-        card.addView(id, idLp);
-        LinearLayout.LayoutParams blp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, Ui.dp(this, 38));
-        blp.setMargins(0, Ui.dp(this, 8), 0, 0);
-        card.addView(cancel, blp);
+            cancel.setOnClickListener(v -> cancelActivity(a));
+            LinearLayout.LayoutParams clp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, Ui.dp(this, 34));
+            clp.setMargins(0, Ui.dp(this, 8), 0, 0);
+            card.addView(cancel, clp);
+        }
+
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        lp.setMargins(0, Ui.dp(this, 8), 0, Ui.dp(this, 8));
+        lp.setMargins(0, 0, 0, Ui.dp(this, 8));
         card.setLayoutParams(lp);
         return card;
+    }
+
+    private boolean canCancelMyActivity(Models.Activity a) {
+        String status = myStatusLabel(a);
+        return "未开始".equals(status) || "进行中".equals(status) || "报名待审核".equals(status) || "已报名".equals(status) || "报名中".equals(status);
+    }
+
+    private int myStatusBg(String status) {
+        if ("报名待审核".equals(status)) return Color.rgb(255, 244, 231);
+        if ("进行中".equals(status) || "报名中".equals(status)) return Color.rgb(232, 248, 240);
+        if ("已结束".equals(status)) return Color.rgb(242, 242, 242);
+        return Ui.PRIMARY_SOFT;
+    }
+
+    private int myStatusFg(String status) {
+        if ("报名待审核".equals(status)) return Ui.WARNING;
+        if ("进行中".equals(status) || "报名中".equals(status)) return Ui.SUCCESS;
+        if ("已结束".equals(status)) return Ui.MUTED;
+        return Ui.PRIMARY;
     }
 
     private View reservationCard(Models.Reservation r, String label) {
         LinearLayout card = new LinearLayout(this);
         card.setOrientation(LinearLayout.VERTICAL);
-        card.setPadding(Ui.dp(this, 15), Ui.dp(this, 14), Ui.dp(this, 15), Ui.dp(this, 14));
+        card.setPadding(Ui.dp(this, 12), Ui.dp(this, 11), Ui.dp(this, 12), Ui.dp(this, 11));
         card.setBackground(Ui.strokeBg(Color.argb(246, 255, 255, 255), Ui.LINE_STRONG, 1, 14, this));
-        card.setElevation(Ui.dp(this, 2));
+        card.setElevation(Ui.dp(this, 1));
         card.setOnClickListener(v -> openReservationDetail(r));
-        TextView title = Ui.text(this, r.activityName == null || r.activityName.isEmpty() ? "预约活动 #" + r.activityId : r.activityName, 19, Ui.TEXT, Typeface.BOLD);
-        String runAt = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.CHINA).format(new java.util.Date(r.runAt));
+        TextView title = Ui.text(this, r.activityName == null || r.activityName.isEmpty() ? "预约活动" : r.activityName, 15, Ui.TEXT, Typeface.BOLD);
+        title.setMaxLines(2);
+        title.setEllipsize(TextUtils.TruncateAt.END);
+        String runAt = new java.text.SimpleDateFormat("MM-dd HH:mm", java.util.Locale.CHINA).format(new java.util.Date(r.runAt));
         TextView meta = Ui.statusPill(this, reservationMeta(r, label, runAt), reservationMetaBg(r), reservationMetaFg(r));
-        TextView result = Ui.text(this, reservationFeedback(r), 14, "failed".equals(r.status) ? Ui.DANGER : Ui.MUTED, Typeface.NORMAL);
-        result.setLineSpacing(Ui.dp(this, 4), 1.0f);
+        TextView result = Ui.text(this, reservationFeedback(r), 12, "failed".equals(r.status) ? Ui.DANGER : Ui.MUTED, Typeface.NORMAL);
+        result.setMaxLines(2);
+        result.setEllipsize(TextUtils.TruncateAt.END);
         card.addView(title);
         LinearLayout.LayoutParams metaLp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        metaLp.setMargins(0, Ui.dp(this, 10), 0, 0);
+        metaLp.setMargins(0, Ui.dp(this, 8), 0, 0);
         card.addView(meta, metaLp);
         LinearLayout.LayoutParams resultLp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        resultLp.setMargins(0, Ui.dp(this, 10), 0, 0);
+        resultLp.setMargins(0, Ui.dp(this, 8), 0, 0);
         card.addView(result, resultLp);
         if ("pending".equals(r.status)) {
             Button cancel = Ui.button(this, "取消预约", Ui.DANGER, android.graphics.Color.WHITE);
@@ -1001,8 +1117,8 @@ public class MainActivity extends Activity {
                 v.setPressed(false);
                 cancelReservation(r);
             });
-            LinearLayout.LayoutParams blp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, Ui.dp(this, 42));
-            blp.setMargins(0, Ui.dp(this, 10), 0, 0);
+            LinearLayout.LayoutParams blp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, Ui.dp(this, 34));
+            blp.setMargins(0, Ui.dp(this, 8), 0, 0);
             card.addView(cancel, blp);
         } else {
             Button delete = Ui.secondaryButton(this, "删除记录");
@@ -1010,12 +1126,12 @@ public class MainActivity extends Activity {
                 v.setPressed(false);
                 deleteReservationRecord(r);
             });
-            LinearLayout.LayoutParams blp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, Ui.dp(this, 42));
-            blp.setMargins(0, Ui.dp(this, 10), 0, 0);
+            LinearLayout.LayoutParams blp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, Ui.dp(this, 34));
+            blp.setMargins(0, Ui.dp(this, 8), 0, 0);
             card.addView(delete, blp);
         }
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        lp.setMargins(0, Ui.dp(this, 8), 0, Ui.dp(this, 8));
+        lp.setMargins(0, 0, 0, Ui.dp(this, 8));
         card.setLayoutParams(lp);
         return card;
     }
@@ -1243,72 +1359,50 @@ public class MainActivity extends Activity {
         scroll.setBackgroundResource(R.drawable.bg_mine);
         LinearLayout page = new LinearLayout(this);
         page.setOrientation(LinearLayout.VERTICAL);
-        page.setPadding(Ui.dp(this, 16), Ui.dp(this, 18), Ui.dp(this, 16), Ui.dp(this, 18));
+        page.setPadding(Ui.dp(this, 16), Ui.dp(this, 14), Ui.dp(this, 16), Ui.dp(this, 18));
         scroll.addView(page, new ScrollView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         content.addView(scroll, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+
         LinearLayout header = new LinearLayout(this);
         header.setOrientation(LinearLayout.HORIZONTAL);
         header.setGravity(Gravity.CENTER_VERTICAL);
-        header.addView(Ui.pageTitle(this, "我的", "账号、分数和本地设置"), new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+        header.addView(Ui.pageTitle(this, "我的", "资料、账号和本地设置"), new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
         header.addView(beijingClockCard());
         page.addView(header);
         clockHandler.removeCallbacks(clockTicker);
         updateBeijingClock();
         clockHandler.postDelayed(clockTicker, 1000);
+
         LinearLayout profile = new LinearLayout(this);
         profile.setOrientation(LinearLayout.VERTICAL);
-        profile.setPadding(Ui.dp(this, 15), Ui.dp(this, 14), Ui.dp(this, 15), Ui.dp(this, 14));
-        profile.setBackground(Ui.strokeBg(Color.argb(246, 255, 255, 255), Ui.LINE_STRONG, 1, 14, this));
-        profile.setElevation(Ui.dp(this, 2));
         LinearLayout.LayoutParams plp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         plp.setMargins(0, Ui.dp(this, 12), 0, Ui.dp(this, 10));
         page.addView(profile, plp);
         renderMineInfo(profile);
 
-        LinearLayout runtimeCard = runtimeStatusCard();
-        LinearLayout.LayoutParams runtimeLp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        runtimeLp.setMargins(0, 0, 0, Ui.dp(this, 10));
-        page.addView(runtimeCard, runtimeLp);
-
-        LinearLayout actionCard = Ui.card(this);
-        actionCard.setPadding(Ui.dp(this, 15), Ui.dp(this, 14), Ui.dp(this, 15), Ui.dp(this, 15));
-        TextView actionTitle = Ui.text(this, "常用操作", 16, Ui.TEXT, Typeface.BOLD);
-        actionCard.addView(actionTitle);
-        LinearLayout actions = new LinearLayout(this);
-        actions.setOrientation(LinearLayout.HORIZONTAL);
-        actions.setGravity(Gravity.CENTER_VERTICAL);
-        Button creditBtn = Ui.primaryButton(this, "查询分数");
-        Button settingsBtn = Ui.secondaryButton(this, "设置");
-        tuneMineButton(creditBtn);
-        tuneMineButton(settingsBtn);
-        actions.addView(creditBtn, mineHalfButtonLp(true));
-        actions.addView(settingsBtn, mineHalfButtonLp(false));
-        actionCard.addView(actions, mineButtonLp());
-
-        LinearLayout accountActions = new LinearLayout(this);
-        accountActions.setOrientation(LinearLayout.HORIZONTAL);
-        accountActions.setGravity(Gravity.CENTER_VERTICAL);
-        Button switchBtn = Ui.secondaryButton(this, "切换账号");
-        Button logoutBtn = Ui.secondaryButton(this, "退出登录");
-        tuneMineButton(switchBtn);
-        tuneMineButton(logoutBtn);
-        accountActions.addView(switchBtn, mineHalfButtonLp(true));
-        accountActions.addView(logoutBtn, mineHalfButtonLp(false));
-        actionCard.addView(accountActions, mineButtonLp());
-        LinearLayout.LayoutParams actionCardLp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        actionCardLp.setMargins(0, 0, 0, Ui.dp(this, 10));
-        page.addView(actionCard, actionCardLp);
-        creditBtn.setOnClickListener(v -> {
+        LinearLayout menu = Ui.card(this);
+        menu.setPadding(0, Ui.dp(this, 4), 0, Ui.dp(this, 4));
+        menu.addView(mineMenuRow("查询分数", "活动分、成果分和诚信值", v -> {
             Intent intent = new Intent(this, CreditActivity.class);
             intent.putExtra(DetailActivity.EXTRA_ACCOUNT_KEY, account.key());
             startActivity(intent);
-        });
-        settingsBtn.setOnClickListener(v -> startActivity(new Intent(this, SettingsActivity.class)));
-        switchBtn.setOnClickListener(v -> showAccountChooser(true));
-        logoutBtn.setOnClickListener(v -> {
+        }, false));
+        menu.addView(Ui.line(this));
+        menu.addView(mineMenuRow("设置", "字体、服务器和检查更新", v -> startActivity(new Intent(this, SettingsActivity.class)), false));
+        menu.addView(Ui.line(this));
+        menu.addView(mineMenuRow("管理账号", "切换、添加或删除本机账号", v -> showAccountChooser(true), false));
+        menu.addView(Ui.line(this));
+        menu.addView(mineMenuRow("退出登录", "回到登录页，已保存账号不会删除", v -> {
+            db.clearLastAccount();
             account = null;
             showLogin();
-        });
+        }, true));
+        LinearLayout.LayoutParams mlp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        mlp.setMargins(0, 0, 0, Ui.dp(this, 10));
+        page.addView(menu, mlp);
+
+        LinearLayout runtimeCard = runtimeStatusCard();
+        page.addView(runtimeCard);
         loadMineInfo(profile);
     }
 
@@ -1369,8 +1463,8 @@ public class MainActivity extends Activity {
         blocks.addView(clockColon());
         blocks.addView(beijingSecond);
 
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(Ui.dp(this, 210), ViewGroup.LayoutParams.WRAP_CONTENT);
-        lp.setMargins(Ui.dp(this, 12), 0, 0, 0);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        lp.setMargins(Ui.dp(this, 10), 0, 0, 0);
         card.setLayoutParams(lp);
         return card;
     }
@@ -1415,50 +1509,119 @@ public class MainActivity extends Activity {
 
     private void renderMineInfo(LinearLayout profile) {
         profile.removeAllViews();
-        profile.addView(infoRow("学校", account.schoolName, "SID " + account.sid));
-        profile.addView(infoRow("账号", account.username, "本地已加密保存"));
-        profile.addView(infoRow("学院", firstNonEmpty(account.collegeName, "正在获取学院名称"), "CID " + account.cid));
-        profile.addView(infoRow("年级", firstNonEmpty(account.yearName, "正在获取年级名称"), "YID " + account.yid));
+        profile.setPadding(Ui.dp(this, 16), Ui.dp(this, 16), Ui.dp(this, 16), Ui.dp(this, 14));
+        profile.setBackground(Ui.strokeBg(Color.argb(246, 255, 255, 255), Ui.LINE_STRONG, 1, 16, this));
+        profile.setElevation(Ui.dp(this, 2));
+
+        LinearLayout hero = new LinearLayout(this);
+        hero.setOrientation(LinearLayout.HORIZONTAL);
+        hero.setGravity(Gravity.CENTER_VERTICAL);
+        profile.addView(hero);
+
+        TextView avatar = Ui.text(this, avatarLetter(account), 18, Color.WHITE, Typeface.BOLD);
+        avatar.setGravity(Gravity.CENTER);
+        avatar.setBackground(Ui.bg(Ui.PRIMARY, 999, this));
+        hero.addView(avatar, new LinearLayout.LayoutParams(Ui.dp(this, 48), Ui.dp(this, 48)));
+
+        LinearLayout identity = new LinearLayout(this);
+        identity.setOrientation(LinearLayout.VERTICAL);
+        LinearLayout.LayoutParams ilp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+        ilp.setMargins(Ui.dp(this, 12), 0, 0, 0);
+        hero.addView(identity, ilp);
+
+        String displayName = firstNonEmpty(account.realName, account.username);
+        identity.addView(Ui.text(this, displayName, 18, Ui.TEXT, Typeface.BOLD));
+        TextView userLine = Ui.text(this, account.username, 12, Ui.MUTED, Typeface.NORMAL);
+        LinearLayout.LayoutParams ulp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        ulp.setMargins(0, Ui.dp(this, 4), 0, 0);
+        identity.addView(userLine, ulp);
+        TextView schoolLine = Ui.text(this, firstNonEmpty(account.schoolName, "未知学校"), 12, Ui.MUTED, Typeface.NORMAL);
+        schoolLine.setSingleLine(true);
+        schoolLine.setEllipsize(TextUtils.TruncateAt.END);
+        LinearLayout.LayoutParams sslp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        sslp.setMargins(0, Ui.dp(this, 3), 0, 0);
+        identity.addView(schoolLine, sslp);
+
+        LinearLayout grid = new LinearLayout(this);
+        grid.setOrientation(LinearLayout.VERTICAL);
+        LinearLayout.LayoutParams glp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        glp.setMargins(0, Ui.dp(this, 14), 0, 0);
+        profile.addView(grid, glp);
+        grid.addView(profileFactRow("学院", firstNonEmpty(account.collegeName, "未获取"), "年级", firstNonEmpty(account.yearName, "未获取")));
+        grid.addView(profileFactRow("专业", firstNonEmpty(account.majorName, "未获取"), "班级", firstNonEmpty(account.className, "未获取")));
     }
 
-    private View infoRow(String label, String value, String sub) {
+    private View profileFactRow(String l1, String v1, String l2, String v2) {
         LinearLayout row = new LinearLayout(this);
-        row.setOrientation(LinearLayout.VERTICAL);
-        row.setPadding(Ui.dp(this, 2), Ui.dp(this, 7), Ui.dp(this, 2), Ui.dp(this, 7));
-        row.addView(Ui.text(this, label, 12, Ui.MUTED, Typeface.BOLD));
-        TextView valueText = Ui.text(this, value, 15, Ui.TEXT, Typeface.NORMAL);
-        valueText.setSingleLine(false);
-        row.addView(valueText);
-        TextView subText = Ui.text(this, sub, 11, Ui.MUTED, Typeface.NORMAL);
-        LinearLayout.LayoutParams slp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setWeightSum(2f);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+        row.addView(profileFact(l1, v1), lp);
+        LinearLayout.LayoutParams rp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+        rp.setMargins(Ui.dp(this, 10), 0, 0, 0);
+        row.addView(profileFact(l2, v2), rp);
+        LinearLayout.LayoutParams wrap = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        wrap.setMargins(0, 0, 0, Ui.dp(this, 8));
+        row.setLayoutParams(wrap);
+        return row;
+    }
+
+    private View profileFact(String label, String value) {
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        box.setPadding(Ui.dp(this, 10), Ui.dp(this, 8), Ui.dp(this, 10), Ui.dp(this, 8));
+        box.setBackground(Ui.bg(Color.rgb(255, 247, 241), 10, this));
+        box.addView(Ui.text(this, label, 11, Ui.MUTED, Typeface.BOLD));
+        TextView val = Ui.text(this, value, 13, Ui.TEXT, Typeface.BOLD);
+        val.setSingleLine(true);
+        val.setEllipsize(TextUtils.TruncateAt.END);
+        LinearLayout.LayoutParams vlp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        vlp.setMargins(0, Ui.dp(this, 4), 0, 0);
+        box.addView(val, vlp);
+        return box;
+    }
+
+    private String avatarLetter(Models.Account item) {
+        String source = firstNonEmpty(item.realName, firstNonEmpty(item.username, "PU"));
+        return source.substring(0, 1);
+    }
+
+    private View mineMenuRow(String title, String sub, View.OnClickListener click, boolean danger) {
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setPadding(Ui.dp(this, 16), Ui.dp(this, 13), Ui.dp(this, 14), Ui.dp(this, 13));
+        row.setBackground(Ui.ripple(Ui.bg(Color.TRANSPARENT, 0, this), Color.argb(24, 255, 122, 26)));
+        LinearLayout text = new LinearLayout(this);
+        text.setOrientation(LinearLayout.VERTICAL);
+        text.addView(Ui.text(this, title, 15, danger ? Ui.DANGER : Ui.TEXT, Typeface.BOLD));
+        TextView subView = Ui.text(this, sub, 12, Ui.MUTED, Typeface.NORMAL);
+        LinearLayout.LayoutParams slp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         slp.setMargins(0, Ui.dp(this, 3), 0, 0);
-        row.addView(subText, slp);
+        text.addView(subView, slp);
+        row.addView(text, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+        row.addView(Ui.text(this, "›", 22, Ui.MUTED, Typeface.NORMAL));
+        row.setOnClickListener(click);
         return row;
     }
 
     private void loadMineInfo(LinearLayout profile) {
         Models.Account target = account;
         new Thread(() -> {
-            String collegeName = cleanName(target.collegeName);
-            String yearName = cleanName(target.yearName);
             try {
                 org.json.JSONObject res = api.userInfo(target);
-                org.json.JSONObject data = res.optJSONObject("data");
-                org.json.JSONObject rootJson = data == null ? res : data;
-                if (collegeName.isEmpty()) {
-                    collegeName = findTextDeep(rootJson, "collegeName", "college", "academyName", "departmentName", "department", "facultyName", "yxmc", "cname", "orgName");
-                }
-                if (yearName.isEmpty()) {
-                    yearName = findTextDeep(rootJson, "yearName", "gradeName", "grade", "year", "njmc", "yname", "enrollmentYear");
-                }
-                updateMineInfoIfChanged(target, profile, collegeName, yearName);
+                Models.applyUserProfile(target, res);
+                updateMineInfoIfChanged(target, profile);
             } catch (Exception ignored) {
             }
+            String collegeName = cleanName(target.collegeName);
+            String yearName = cleanName(target.yearName);
 
             if (yearName.isEmpty() && target.yid > 0) {
                 try {
                     yearName = findNameByIdDeep(api.yearList(target), target.yid);
-                    updateMineInfoIfChanged(target, profile, collegeName, yearName);
+                    if (!yearName.isEmpty()) target.yearName = yearName;
+                    updateMineInfoIfChanged(target, profile);
                 } catch (Exception ignored) {
                 }
             }
@@ -1467,50 +1630,26 @@ public class MainActivity extends Activity {
                 String[] found = findCollegeYearInActivities(target, allActivities);
                 if (collegeName.isEmpty()) collegeName = found[0];
                 if (yearName.isEmpty()) yearName = found[1];
-                updateMineInfoIfChanged(target, profile, collegeName, yearName);
+                if (!collegeName.isEmpty()) target.collegeName = collegeName;
+                if (!yearName.isEmpty()) target.yearName = yearName;
+                updateMineInfoIfChanged(target, profile);
             }
 
-            if (collegeName.isEmpty() || yearName.isEmpty()) {
-                try {
-                    List<Models.Activity> source = api.getActivities(target);
-                    int checked = 0;
-                    for (Models.Activity base : source) {
-                        if (base.id == 0) continue;
-                        Models.Activity detail = api.getActivityInfo(target, base.id);
-                        base.fillMissingFrom(detail);
-                        checked++;
-                        if (collegeName.isEmpty()) collegeName = findNameInArray(base.allowCollege, target.cid);
-                        if (yearName.isEmpty()) yearName = findNameInArray(base.allowYear, target.yid);
-                        updateMineInfoIfChanged(target, profile, collegeName, yearName);
-                        if ((!collegeName.isEmpty() && !yearName.isEmpty()) || checked >= 80) break;
-                    }
-                } catch (Exception ignored) {
-                }
-            }
-
-            updateMineInfoIfChanged(target, profile, collegeName, yearName);
+            updateMineInfoIfChanged(target, profile);
         }).start();
     }
 
-    private void updateMineInfoIfChanged(Models.Account target, LinearLayout profile, String collegeName, String yearName) {
+    private void updateMineInfoIfChanged(Models.Account target, LinearLayout profile) {
         if (target != account) return;
-        boolean changed = false;
-        String college = cleanName(collegeName);
-        String year = cleanName(yearName);
-        if (!college.isEmpty() && !college.equals(target.collegeName)) {
-            target.collegeName = college;
-            changed = true;
-        }
-        if (!year.isEmpty() && !year.equals(target.yearName)) {
-            target.yearName = year;
-            changed = true;
-        }
-        if (changed) {
-            db.updateAccountNames(target);
-            runOnUiThread(() -> {
-                if (target == account && profile.getParent() != null) renderMineInfo(profile);
-            });
-        }
+        if (target.collegeName != null) target.collegeName = cleanName(target.collegeName);
+        if (target.yearName != null) target.yearName = cleanName(target.yearName);
+        if (target.realName != null) target.realName = cleanName(target.realName);
+        if (target.className != null) target.className = cleanName(target.className);
+        if (target.majorName != null) target.majorName = cleanName(target.majorName);
+        db.updateAccountNames(target);
+        runOnUiThread(() -> {
+            if (target == account && profile.getParent() != null) renderMineInfo(profile);
+        });
     }
 
     private String[] findCollegeYearInActivities(Models.Account target, List<Models.Activity> activities) {
@@ -1636,57 +1775,151 @@ public class MainActivity extends Activity {
 
     private void showAccountChooser(boolean fromMain) {
         List<Models.Account> accounts = db.getAccounts();
-        if (accounts.isEmpty()) {
-            toast("还没有保存账号");
-            return;
-        }
         LinearLayout box = new LinearLayout(this);
         box.setOrientation(LinearLayout.VERTICAL);
-        box.setPadding(Ui.dp(this, 16), Ui.dp(this, 10), Ui.dp(this, 16), 0);
+        box.setPadding(Ui.dp(this, 16), Ui.dp(this, 8), Ui.dp(this, 16), Ui.dp(this, 8));
+        TextView hint = Ui.text(this, "可切换、添加或删除本机保存的账号。切换时会重新登录以刷新资料。", 13, Ui.MUTED, Typeface.NORMAL);
+        hint.setLineSpacing(Ui.dp(this, 3), 1.0f);
+        box.addView(hint);
         ScrollView scroll = new ScrollView(this);
+        scroll.setFillViewport(true);
         LinearLayout list = new LinearLayout(this);
         list.setOrientation(LinearLayout.VERTICAL);
         scroll.addView(list);
+        LinearLayout.LayoutParams slp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, Ui.dp(this, 320));
+        slp.setMargins(0, Ui.dp(this, 10), 0, 0);
+        box.addView(scroll, slp);
         AlertDialog dialog = new AlertDialog.Builder(this)
-                .setTitle("切换账号")
-                .setView(scroll)
-                .setNegativeButton("取消", null)
+                .setTitle("管理账号")
+                .setView(box)
+                .setNegativeButton("关闭", null)
                 .create();
-        for (Models.Account item : accounts) {
-            list.addView(accountChoiceCard(item, dialog));
-        }
+        Runnable refresh = () -> {
+            list.removeAllViews();
+            List<Models.Account> latest = db.getAccounts();
+            if (latest.isEmpty()) {
+                list.addView(Ui.emptyState(this, "还没有保存账号", "登录后会保存在本机"), new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, Ui.dp(this, 160)));
+                return;
+            }
+            for (Models.Account item : latest) list.addView(accountChoiceCard(item, dialog, () -> {
+                dialog.dismiss();
+                showAccountChooser(fromMain);
+            }));
+        };
+        Button add = Ui.primaryButton(this, "添加账号");
+        LinearLayout.LayoutParams alp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, Ui.dp(this, 42));
+        alp.setMargins(0, Ui.dp(this, 10), 0, 0);
+        box.addView(add, alp);
+        add.setOnClickListener(v -> {
+            dialog.dismiss();
+            if (fromMain) showLogin();
+        });
+        refresh.run();
         dialog.show();
     }
 
-    private View accountChoiceCard(Models.Account item, AlertDialog dialog) {
+    private View accountChoiceCard(Models.Account item, AlertDialog dialog, Runnable onDeleted) {
         boolean selected = account != null && account.key().equals(item.key());
         LinearLayout card = new LinearLayout(this);
         card.setOrientation(LinearLayout.VERTICAL);
         card.setPadding(Ui.dp(this, 14), Ui.dp(this, 12), Ui.dp(this, 14), Ui.dp(this, 12));
-        card.setBackground(Ui.ripple(Ui.strokeBg(selected ? Ui.PRIMARY_SOFT : Color.argb(248, 255, 255, 255), selected ? Ui.PRIMARY : Ui.LINE_STRONG, selected ? 2 : 1, 14, this), Color.argb(28, 255, 122, 26)));
+        card.setBackground(Ui.strokeBg(selected ? Ui.PRIMARY_SOFT : Color.argb(248, 255, 255, 255), selected ? Ui.PRIMARY : Ui.LINE_STRONG, selected ? 2 : 1, 14, this));
         card.setElevation(Ui.dp(this, selected ? 3 : 1));
-        TextView school = Ui.text(this, firstNonEmpty(item.schoolName, "未知学校"), 16, Ui.TEXT, Typeface.BOLD);
-        TextView user = Ui.text(this, item.username, 13, Ui.MUTED, Typeface.NORMAL);
-        TextView meta = Ui.text(this, selected ? "当前账号" : "点击切换到这个账号", 12, selected ? Ui.PRIMARY : Ui.MUTED, selected ? Typeface.BOLD : Typeface.NORMAL);
-        card.addView(school);
+        String title = firstNonEmpty(item.realName, item.username);
+        TextView name = Ui.text(this, title, 16, Ui.TEXT, Typeface.BOLD);
+        TextView user = Ui.text(this, item.username + " · " + firstNonEmpty(item.schoolName, "未知学校"), 12, Ui.MUTED, Typeface.NORMAL);
+        String metaText = selected ? "当前账号" : "点击切换到这个账号";
+        if (!cleanName(item.collegeName).isEmpty() || !cleanName(item.majorName).isEmpty()) {
+            metaText = firstNonEmpty(item.collegeName, "") + (cleanName(item.majorName).isEmpty() ? "" : " · " + item.majorName);
+            if (selected) metaText = "当前账号 · " + metaText;
+        }
+        TextView meta = Ui.text(this, metaText, 12, selected ? Ui.PRIMARY : Ui.MUTED, selected ? Typeface.BOLD : Typeface.NORMAL);
+        card.addView(name);
         LinearLayout.LayoutParams ulp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        ulp.setMargins(0, Ui.dp(this, 7), 0, 0);
+        ulp.setMargins(0, Ui.dp(this, 5), 0, 0);
         card.addView(user, ulp);
         LinearLayout.LayoutParams mlp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        mlp.setMargins(0, Ui.dp(this, 7), 0, 0);
+        mlp.setMargins(0, Ui.dp(this, 5), 0, 0);
         card.addView(meta, mlp);
-        card.setOnClickListener(v -> {
-            account = item;
-            db.setLastAccount(account);
-            allActivities.clear();
-            myActivities.clear();
+
+        LinearLayout actions = new LinearLayout(this);
+        actions.setOrientation(LinearLayout.HORIZONTAL);
+        LinearLayout.LayoutParams alp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        alp.setMargins(0, Ui.dp(this, 10), 0, 0);
+        card.addView(actions, alp);
+        Button use = selected ? Ui.softButton(this, "刷新资料") : Ui.primaryButton(this, "切换");
+        Button delete = Ui.secondaryButton(this, "删除");
+        LinearLayout.LayoutParams useLp = new LinearLayout.LayoutParams(0, Ui.dp(this, 34), 1f);
+        useLp.setMargins(0, 0, Ui.dp(this, 6), 0);
+        LinearLayout.LayoutParams delLp = new LinearLayout.LayoutParams(0, Ui.dp(this, 34), 1f);
+        delLp.setMargins(Ui.dp(this, 6), 0, 0, 0);
+        actions.addView(use, useLp);
+        actions.addView(delete, delLp);
+        use.setOnClickListener(v -> {
             dialog.dismiss();
-            showMain();
+            switchToAccount(item);
         });
+        delete.setOnClickListener(v -> confirmDeleteAccount(item, dialog, onDeleted));
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        lp.setMargins(0, Ui.dp(this, 8), 0, Ui.dp(this, 6));
+        lp.setMargins(0, Ui.dp(this, 8), 0, Ui.dp(this, 4));
         card.setLayoutParams(lp);
         return card;
+    }
+
+    private void confirmDeleteAccount(Models.Account item, AlertDialog parent, Runnable onDeleted) {
+        new AlertDialog.Builder(this)
+                .setTitle("删除账号")
+                .setMessage("确定删除 " + firstNonEmpty(item.realName, item.username) + " 吗？本地预约记录不会一起删除。")
+                .setNegativeButton("取消", null)
+                .setPositiveButton("删除", (d, w) -> {
+                    boolean current = account != null && account.key().equals(item.key());
+                    db.deleteAccount(item);
+                    toast("已删除账号");
+                    if (current) {
+                        parent.dismiss();
+                        List<Models.Account> rest = db.getAccounts();
+                        if (rest.isEmpty()) {
+                            account = null;
+                            showLogin();
+                        } else {
+                            switchToAccount(rest.get(0));
+                        }
+                    } else if (onDeleted != null) {
+                        onDeleted.run();
+                    }
+                })
+                .show();
+    }
+
+    private void switchToAccount(Models.Account item) {
+        if (item == null) return;
+        if (item.password == null || item.password.isEmpty()) {
+            toast("该账号没有保存密码，请重新登录");
+            account = item;
+            db.setLastAccount(item);
+            showLogin();
+            return;
+        }
+        ProgressDialog wait = ProgressDialog.show(this, "", "正在切换账号...", true, false);
+        new Thread(() -> {
+            try {
+                Models.Account logged = api.login(item.schoolName, item.sid, item.username, item.password);
+                runOnUiThread(() -> {
+                    wait.dismiss();
+                    account = logged;
+                    allActivities.clear();
+                    myActivities.clear();
+                    localReservations.clear();
+                    showMain();
+                    toast("已切换到 " + firstNonEmpty(logged.realName, logged.username));
+                });
+            } catch (Exception ex) {
+                runOnUiThread(() -> {
+                    wait.dismiss();
+                    toast("切换失败: " + message(ex));
+                });
+            }
+        }).start();
     }
 
     private void openDetail(Models.Activity activity) {

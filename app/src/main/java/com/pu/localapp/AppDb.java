@@ -11,7 +11,7 @@ import java.util.List;
 
 final class AppDb extends SQLiteOpenHelper {
     private static final String DB_NAME = "pu_local.db";
-    private static final int DB_VERSION = 3;
+    private static final int DB_VERSION = 4;
     private final EncryptedPrefs encryptedPrefs;
 
     AppDb(Context context) {
@@ -30,6 +30,9 @@ final class AppDb extends SQLiteOpenHelper {
                 "yid INTEGER DEFAULT 0," +
                 "college_name TEXT," +
                 "year_name TEXT," +
+                "real_name TEXT," +
+                "class_name TEXT," +
+                "major_name TEXT," +
                 "updated_at INTEGER NOT NULL," +
                 "UNIQUE(sid, username))");
         db.execSQL("CREATE TABLE reservations (" +
@@ -61,6 +64,11 @@ final class AppDb extends SQLiteOpenHelper {
             addColumnIfMissing(db, "reservations", "remote_id", "TEXT");
             addColumnIfMissing(db, "reservations", "server_url", "TEXT");
         }
+        if (oldVersion < 4) {
+            addColumnIfMissing(db, "accounts", "real_name", "TEXT");
+            addColumnIfMissing(db, "accounts", "class_name", "TEXT");
+            addColumnIfMissing(db, "accounts", "major_name", "TEXT");
+        }
     }
 
     Models.Account upsertAccount(Models.Account account) {
@@ -75,6 +83,9 @@ final class AppDb extends SQLiteOpenHelper {
         values.put("yid", account.yid);
         values.put("college_name", account.collegeName);
         values.put("year_name", account.yearName);
+        values.put("real_name", account.realName);
+        values.put("class_name", account.className);
+        values.put("major_name", account.majorName);
         values.put("updated_at", now);
         long rowId = db.insertWithOnConflict("accounts", null, values, SQLiteDatabase.CONFLICT_IGNORE);
         if (rowId == -1) {
@@ -92,7 +103,14 @@ final class AppDb extends SQLiteOpenHelper {
         ContentValues values = new ContentValues();
         values.put("college_name", account.collegeName);
         values.put("year_name", account.yearName);
+        values.put("real_name", account.realName);
+        values.put("class_name", account.className);
+        values.put("major_name", account.majorName);
         getWritableDatabase().update("accounts", values, "sid=? AND username=?", new String[]{String.valueOf(account.sid), account.username});
+    }
+
+    void clearLastAccount() {
+        encryptedPrefs.remove("last_account_key");
     }
 
     Models.Account getLastAccount() {
@@ -246,6 +264,12 @@ final class AppDb extends SQLiteOpenHelper {
         int yearIndex = c.getColumnIndex("year_name");
         a.collegeName = collegeIndex < 0 ? "" : c.getString(collegeIndex);
         a.yearName = yearIndex < 0 ? "" : c.getString(yearIndex);
+        int realIndex = c.getColumnIndex("real_name");
+        int classIndex = c.getColumnIndex("class_name");
+        int majorIndex = c.getColumnIndex("major_name");
+        a.realName = realIndex < 0 ? "" : c.getString(realIndex);
+        a.className = classIndex < 0 ? "" : c.getString(classIndex);
+        a.majorName = majorIndex < 0 ? "" : c.getString(majorIndex);
         a.updatedAt = c.getLong(c.getColumnIndexOrThrow("updated_at"));
         a.password = encryptedPrefs.get(secretKey(a.key(), "password"), "");
         a.token = encryptedPrefs.get(secretKey(a.key(), "token"), "");
